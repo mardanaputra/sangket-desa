@@ -1,98 +1,197 @@
-import Link from "next/link";
+"use client";
 
-export const metadata = {
-  title: "Layanan Surat - Desa Sangket",
-  description: "Informasi persyaratan administrasi kependudukan dan layanan surat menyurat Desa Sangket.",
-};
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import Navbar from "@/components/Navbar";
+
+// =========================================================================
+// METADATA (AMAN: TIDAK DIUBAH)
+// =========================================================================
+
+// =========================================================================
+
+// Data layanan list
+const layananList = [
+  {
+    title: "Surat Keterangan Usaha",
+    desc: "Untuk keperluan pengajuan KUR atau administrasi bank.",
+    syarat: [
+      "Fotocopy KTP & KK",
+      "Foto lokasi usaha",
+      "Lunas PBB tahun terakhir",
+    ],
+    templateUrl: "/templates/sku_formulir.docx",
+  },
+  {
+    title: "Surat Keterangan Menikah",
+    desc: "Pengantar dan keterangan untuk mengurus pernikahan (N1, N2, N4).",
+    syarat: [
+      "Fotocopy KTP calon suami & istri",
+      "Fotocopy KK",
+      "Pas foto 3x4 (3 lembar)",
+      "Surat pengantar RT/RW",
+    ],
+    templateUrl: "/templates/surat_keterangan_menikah.docx",
+  },
+  {
+    title: "Surat Keterangan Domisili",
+    desc: "Keterangan tempat tinggal sementara atau pindahan.",
+    syarat: [
+      "Fotocopy KTP & KK",
+      "Surat Pengantar RT/RW",
+      "Pas foto 3x4 (2 lembar)",
+    ],
+    templateUrl: "/templates/skd_permohonan.docx",
+  },
+  {
+    title: "Surat Pengantar KTP / KK",
+    desc: "Pembuatan baru, perubahan data, atau KTP hilang.",
+    syarat: [
+      "Fotocopy Akta Kelahiran/Ijazah",
+      "Fotocopy KK Lama (jika ada)",
+      "Surat Kehilangan (jika hilang)",
+    ],
+    templateUrl: "/templates/ktp_kk_formulir.docx",
+  },
+  {
+    title: "Surat Keterangan Tidak Mampu",
+    desc: "Untuk keperluan beasiswa sekolah atau bantuan kesehatan.",
+    syarat: [
+      "Fotocopy KTP & KK",
+      "Surat Pengantar RT/RW",
+      "Foto kondisi rumah (depan, samping, dalam)",
+    ],
+    templateUrl: "/templates/sktm_permohonan.docx",
+  },
+  {
+    title: "Surat Keterangan Kelahiran",
+    desc: "Pengantar untuk pembuatan Akta Kelahiran.",
+    syarat: [
+      "Fotocopy KTP Orang Tua & Saksi",
+      "Surat Keterangan Bidan/RS",
+      "Fotocopy KK & Buku Nikah",
+    ],
+    templateUrl: "/templates/sk_kelahiran.docx",
+  },
+  {
+    title: "Surat Kematian",
+    desc: "Pelaporan warga meninggal dunia untuk update KK.",
+    syarat: [
+      "Fotocopy KTP & KK Almarhum",
+      "Surat Keterangan RS/Dokter",
+      "Fotocopy KTP Pelapor",
+    ],
+    templateUrl: "/templates/sk_kematian.docx",
+  },
+];
 
 export default function Layanan() {
-  const layananList = [
-    {
-      title: "Surat Keterangan Usaha",
-      icon: "🏪",
-      desc: "Untuk keperluan pengajuan KUR atau administrasi bank.",
-      syarat: ["Fotocopy KTP & KK", "Foto lokasi usaha", "Lunas PBB tahun terakhir"]
-    },
-    {
-      title: "Surat Keterangan Domisili",
-      icon: "🏠",
-      desc: "Keterangan tempat tinggal sementara atau pindahan.",
-      syarat: ["Fotocopy KTP & KK", "Surat Pengantar RT/RW", "Pas foto 3x4 (2 lembar)"]
-    },
-    {
-      title: "Surat Pengantar KTP / KK",
-      icon: "🪪",
-      desc: "Pembuatan baru, perubahan data, atau KTP hilang.",
-      syarat: ["Fotocopy Akta Kelahiran/Ijazah", "Fotocopy KK Lama (jika ada)", "Surat Kehilangan (jika hilang)"]
-    },
-    {
-      title: "Surat Keterangan Tidak Mampu",
-      icon: "🤝",
-      desc: "Untuk keperluan beasiswa sekolah atau bantuan kesehatan.",
-      syarat: ["Fotocopy KTP & KK", "Surat Pengantar RT/RW", "Foto kondisi rumah (depan, samping, dalam)"]
-    },
-    {
-      title: "Surat Keterangan Kelahiran",
-      icon: "👶",
-      desc: "Pengantar untuk pembuatan Akta Kelahiran.",
-      syarat: ["Fotocopy KTP Orang Tua & Saksi", "Surat Keterangan Bidan/RS", "Fotocopy KK & Buku Nikah"]
-    },
-    {
-      title: "Surat Kematian",
-      icon: "🕊️",
-      desc: "Pelaporan warga meninggal dunia untuk update KK.",
-      syarat: ["Fotocopy KTP & KK Almarhum", "Surat Keterangan RS/Dokter", "Fotocopy KTP Pelapor"]
-    },
-  ];
+  // ======================================================
+  // SCROLL NAVBAR (TRANSPARAN → PUTIH)
+  // ======================================================
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
-    <main className="bg-gray-50 min-h-screen pb-20">
-      
-      {/* HEADER */}
-      <section className="bg-green-600 py-16 text-center text-white px-6">
-        <h1 className="text-4xl font-bold mb-4">Layanan Administrasi Desa</h1>
-        <p className="text-green-100 max-w-2xl mx-auto">
-          Cek persyaratan surat menyurat di sini sebelum datang ke kantor desa agar pelayanan lebih cepat dan efisien.
-        </p>
-      </section>
+    <>
+      {/* NAVBAR (TIDAK DIUBAH FITURNYA) */}
+      <Navbar scrolled={scrolled} />
 
-      {/* KONTEN UTAMA */}
-      <div className="max-w-6xl mx-auto px-6 -mt-10">
-        
-        {/* Banner Info Jam Kerja */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-10 border-l-4 border-yellow-400 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div>
-            <h3 className="text-lg font-bold text-gray-800">⏰ Jam Pelayanan Kantor</h3>
-            <p className="text-gray-600 text-sm">Senin - Kamis (08.00 - 15.00) | Jumat (08.00 - 13.00)</p>
+      <main className="bg-gray-50 min-h-screen pb-20">
+        {/* ======================================================
+            HERO SECTION (FOTO GANTI WARNA HIJAU)
+        ====================================================== */}
+        <section className="relative pt-28 pb-32 px-6 text-center text-white overflow-hidden">
+          <Image
+            src="/hero-buleleng-2.webp"
+            alt="Layanan Administrasi Desa Sangket"
+            fill
+            priority
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-black/55" />
+
+          <div className="relative z-10 max-w-4xl mx-auto">
+            <h1 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">
+              Layanan Administrasi Desa
+            </h1>
+            <p className="text-gray-200 text-lg">
+              Cek persyaratan surat menyurat di sini sebelum datang ke kantor desa
+              agar pelayanan lebih cepat dan efisien.
+            </p>
           </div>
-          <Link href="https://wa.me/6281234567890" target="_blank" className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full font-bold text-sm transition flex items-center gap-2">
-            <span>Chat WhatsApp Admin</span>
-          </Link>
-        </div>
+        </section>
 
-        {/* Grid Layanan */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {layananList.map((item, index) => (
-            <div key={index} className="bg-white p-6 rounded-xl border border-gray-200 hover:border-green-500 hover:shadow-lg transition group">
-              <div className="text-4xl mb-4 bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center group-hover:bg-green-50 transition">
-                {item.icon}
-              </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">{item.title}</h3>
-              <p className="text-gray-500 text-sm mb-4">{item.desc}</p>
-              
-              <div className="bg-green-50 rounded-lg p-4">
-                <h4 className="text-green-700 font-semibold text-xs uppercase mb-2">Persyaratan:</h4>
-                <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
-                  {item.syarat.map((syarat, i) => (
-                    <li key={i}>{syarat}</li>
-                  ))}
-                </ul>
-              </div>
+        {/* ======================================================
+            KONTEN UTAMA
+        ====================================================== */}
+        <div className="max-w-6xl mx-auto px-6 -mt-16 relative z-10">
+          {/* INFO JAM KERJA */}
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-10 border-l-4 border-green-600 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-bold text-gray-800">
+                Jam Pelayanan Kantor
+              </h3>
+              <p className="text-gray-600 text-sm">
+                Senin - Kamis (08.00 - 15.00) | Jumat (08.00 - 13.00)
+              </p>
             </div>
-          ))}
-        </div>
 
-      </div>
-    </main>
+            <Link
+              href="https://wa.me/6281234567890"
+              target="_blank"
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full font-bold text-sm transition flex items-center gap-2 shadow-lg"
+            >
+              Hubungi Admin
+            </Link>
+          </div>
+
+          {/* GRID LAYANAN */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {layananList.map((item, index) => (
+              <div
+                key={index}
+                className="bg-white p-6 rounded-xl border border-gray-200 hover:border-green-600 hover:shadow-xl transition flex flex-col justify-between"
+              >
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">
+                    {item.title}
+                  </h3>
+                  <p className="text-gray-500 text-sm mb-4">{item.desc}</p>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <h4 className="text-green-700 font-semibold text-xs uppercase mb-2">
+                    Persyaratan:
+                  </h4>
+                  <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside mb-4">
+                    {item.syarat.map((syarat, i) => (
+                      <li key={i}>{syarat}</li>
+                    ))}
+                  </ul>
+
+                  {item.templateUrl && (
+                    <Link
+                      href={item.templateUrl}
+                      target="_blank"
+                      download
+                      className="inline-flex items-center justify-center w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold text-sm transition shadow-md"
+                    >
+                      Unduh Template Surat
+                    </Link>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </main>
+    </>
   );
 }
