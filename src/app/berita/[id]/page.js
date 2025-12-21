@@ -1,121 +1,131 @@
+"use client";
+
+import { useEffect } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image"; 
-import { notFound } from "next/navigation"; 
+import Image from "next/image";
+import useNewsStore from "@/store/useNewsStore";
+import Navbar from "@/components/Navbar";
 
-// Fungsi untuk mengambil data artikel dari API
-async function getArticleData(id) {
+export default function DetailBerita() {
+  const { id } = useParams(); // Mengambil ID dari URL
   
-  // Ambil URL langsung dari environment variable (paling aman untuk Server Component)
-  const BASE_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
-  
-  try {
-    const response = await fetch(`${BASE_API_URL}/articles/${id}`, {
-      // Menggunakan cache: 'no-store' agar server selalu mengambil data terbaru 
-      // saat halaman di-request ulang (berguna saat development)
-      cache: 'no-store' 
-    });
+  // Tambahkan getImageUrl dan clearSingleNews dari Zustand store
+  const { 
+    singleNews, 
+    loading, 
+    error, 
+    fetchNewsById, 
+    getImageUrl, 
+    clearSingleNews 
+  } = useNewsStore();
 
-    if (response.status === 404) {
-      return null; 
+  useEffect(() => {
+    if (id) {
+      fetchNewsById(id);
     }
 
-    if (!response.ok) {
-      console.error(`Gagal mengambil data dari API: Status ${response.status}`);
-      return null;
-    }
+    // Membersihkan state saat meninggalkan halaman (Cleanup)
+    return () => {
+      if (clearSingleNews) clearSingleNews();
+    };
+  }, [id, fetchNewsById, clearSingleNews]);
 
-    const data = await response.json();
-    return data;
-    
-  } catch (error) {
-    console.error("Error fetching article:", error);
-    return null;
+  // 1. Penanganan Loading
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-700 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Memuat isi berita...</p>
+        </div>
+      </div>
+    );
   }
-}
 
-export default async function DetailBerita(props) {
-  
-  // 🛑 FIX UTAMA UNTUK MENGATASI ERROR RUNTIME:
-  // Akses params.id secara langsung dari props untuk menghindari desctructuring 
-  // yang bermasalah di Server Component Next.js/Turbopack.
-  const id = props.params?.id;
-
-  // 1. Jika ID tidak ada atau undefined, kembalikan 404
-  if (!id) {
-    notFound(); 
+  // 2. Penanganan Error atau Data Kosong
+  if (error || (!loading && !singleNews)) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 text-center px-4">
+        <h1 className="text-6xl font-bold text-gray-200 mb-4">404</h1>
+        <p className="text-gray-600 text-lg mb-8">{error || "Maaf, berita tidak ditemukan."}</p>
+        <Link href="/berita" className="bg-green-700 text-white px-8 py-3 rounded-full hover:bg-green-800 transition shadow-lg">
+          Kembali ke Kabar Desa
+        </Link>
+      </div>
+    );
   }
-  
-  // 2. Ambil data berita dari API
-  const data = await getArticleData(id);
 
-  // 3. Jika data tidak ditemukan (misal API mengembalikan null atau 404)
-  if (!data) {
-    notFound(); // Menggunakan fungsi notFound() dari Next.js
-  }
-  
-  // 4. Tampilkan Konten
+  // 3. Tampilan Utama jika Data Berhasil Diambil
   return (
     <main className="bg-white min-h-screen pb-20">
+      <Navbar scrolled={true} />
       
-      {/* GAMBAR UTAMA (Hero Image) */}
-      <div className="w-full h-[400px] bg-gray-200 relative">
-        
-        {/* Menggunakan data.image_url yang sudah diformat lengkap oleh Laravel */}
-        {data.image_url ? (
-            <Image 
-                src={data.image_url} 
-                alt={data.title || "Gambar Utama Berita"} 
-                fill 
-                sizes="100vw"
-                className="object-cover"
-                priority 
-            />
-        ) : (
-             <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                [Gambar Utama Berita Tidak Tersedia]
-            </div>
-        )}
+      {/* GAMBAR UTAMA (Hero Image) dengan Optimasi */}
+      <div className="w-full h-[450px] bg-gray-200 relative">
+        <Image 
+          // Menggunakan getImageUrl untuk menangani path dari Laravel Storage
+          src={getImageUrl(singleNews.image || singleNews.image_url)} 
+          alt={singleNews.title}
+          fill
+          className="object-cover"
+          priority // Prioritas loading untuk gambar utama
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-black/30" />
       </div>
 
       {/* KONTEN ARTIKEL */}
       <article className="max-w-4xl mx-auto px-6 -mt-32 relative z-10">
-        <div className="bg-white rounded-3xl shadow-xl p-8 md:p-12 border border-gray-100">
+        <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 border border-gray-100">
           
-          {/* Breadcrumb / Navigasi Kecil */}
-          <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-            <Link href="/" className="hover:text-green-600">Beranda</Link> / 
-            <Link href="/berita" className="hover:text-green-600">Kabar Desa</Link> / 
-            <span className="text-green-600 font-medium">Baca Berita</span>
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-2 text-sm text-gray-500 mb-8">
+            <Link href="/" className="hover:text-green-600 transition">Beranda</Link>
+            <span>/</span>
+            <Link href="/berita" className="hover:text-green-600 transition">Kabar Desa</Link>
+            <span>/</span>
+            <span className="text-green-600 font-medium truncate">Baca Berita</span>
           </div>
 
-          {/* Judul & Info */}
-          <span className="inline-block bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold mb-4">
-            {data.category}
+          {/* Judul & Kategori */}
+          <span className="inline-block bg-green-100 text-green-700 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-6">
+            {singleNews.category}
           </span>
-          <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
-            {data.title}
+          <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-8 leading-tight">
+            {singleNews.title}
           </h1>
           
-          <div className="flex items-center gap-6 text-sm text-gray-500 border-b border-gray-100 pb-8 mb-8">
-            <div className="flex items-center gap-2">
-              <span className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">👤</span>
-              {data.author || "Admin Desa"} 
+          {/* Metadata Penulis & Tanggal */}
+          <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500 border-b border-gray-100 pb-8 mb-10">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold">
+                {singleNews.author?.charAt(0) || "A"}
+              </div>
+              <div>
+                <p className="text-gray-900 font-semibold">{singleNews.author || "Admin Desa"}</p>
+                <p className="text-xs">Penulis Artikel</p>
+              </div>
             </div>
-            <div>📅 {data.date}</div>
+            <div className="h-8 w-[1px] bg-gray-200 hidden md:block" />
+            <div className="flex items-center gap-2">
+              <span className="text-lg">📅</span> {singleNews.date}
+            </div>
           </div>
 
-          {/* Isi Berita (Render HTML) */}
+          {/* Isi Berita (Render HTML dari Laravel) */}
           <div 
-            className="prose prose-lg text-gray-600 leading-relaxed max-w-none"
-            // Menggunakan data.content atau data.desc dari API Laravel
-            dangerouslySetInnerHTML={{ __html: data.content || data.desc }} 
+            className="prose prose-lg md:prose-xl text-gray-700 leading-relaxed max-w-none 
+                       prose-headings:text-gray-900 prose-a:text-green-600 prose-img:rounded-2xl"
+            dangerouslySetInnerHTML={{ __html: singleNews.content }}
           />
+
         </div>
 
-        {/* Tombol Kembali */}
-        <div className="mt-12 text-center">
-          <Link href="/berita" className="inline-flex items-center gap-2 text-green-600 font-medium hover:underline hover:bg-green-50 px-6 py-3 rounded-full transition">
-            ← Kembali ke Daftar Berita
+        {/* Tombol Kembali di Bawah */}
+        <div className="mt-16 text-center">
+          <Link href="/berita" className="inline-flex items-center gap-3 text-green-700 font-bold hover:gap-5 transition-all">
+            <span>←</span> Kembali ke Daftar Berita
           </Link>
         </div>
       </article>

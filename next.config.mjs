@@ -10,7 +10,7 @@ const nextConfig = {
         protocol: 'http', 
         hostname: 'localhost', 
         port: '8000', 
-        pathname: '/storage/article/**', 
+        pathname: '/**', 
       },
       {
         // Konfigurasi untuk IP loopback '127.0.0.1'
@@ -18,7 +18,7 @@ const nextConfig = {
         protocol: 'http', 
         hostname: '127.0.0.1', 
         port: '8000', 
-        pathname: '/storage/article/**', 
+        pathname: '/**', 
       },
     ],
   },
