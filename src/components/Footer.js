@@ -2,14 +2,9 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    // PERUBAHAN UTAMA:
-    // 1. bg-gray-900 diubah menjadi bg-white (Putih) atau bg-gray-100 (Abu-abu muda)
-    // 2. text-gray-300 diubah menjadi text-gray-700 (Gelap)
-    // 3. border-t border-gray-800 disesuaikan menjadi border-gray-200
     <footer className="bg-gray-100 text-gray-700 py-12 border-t border-gray-200">
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8">
         
-        {/* KOLOM 1: IDENTITAS */}
         <div className="space-y-4">
           {/* Warna teks diubah menjadi gelap (gray-800) */}
           <h3 className="text-2xl font-bold text-gray-800">Desa <span className="text-green-600">Sangket</span></h3>

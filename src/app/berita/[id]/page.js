@@ -1,61 +1,80 @@
 import Link from "next/link";
+import Image from "next/image"; 
+import { notFound } from "next/navigation"; 
 
-// Ini Data Dummy (Pura-puranya Database)
-const newsDatabase = [
-  {
-    id: "1",
-    title: "Musyawarah Perencanaan Pembangunan Desa 2025",
-    date: "08 Des 2025",
-    category: "Pemerintahan",
-    author: "Admin Desa",
-    content: `
-      <p>Pemerintah Desa Sangket telah melaksanakan Musyawarah Perencanaan Pembangunan Desa (Musrenbangdes) untuk penyusunan RKPDes Tahun Anggaran 2025.</p>
-      <p>Kegiatan ini dihadiri oleh seluruh perangkat desa, BPD, LPM, tokoh masyarakat, dan perwakilan dari setiap dusun. Dalam musyawarah ini, disepakati beberapa prioritas pembangunan infrastruktur dan pemberdayaan masyarakat.</p>
-      <p>Kepala Desa menekankan pentingnya transparansi dalam setiap penggunaan anggaran agar manfaatnya bisa dirasakan langsung oleh warga.</p>
-    `
-  },
-  {
-    id: "2",
-    title: "Jadwal Posyandu Balita & Lansia Bulan Desember",
-    date: "06 Des 2025",
-    category: "Kesehatan",
-    author: "Bidan Desa",
-    content: `
-      <p>Demi meningkatkan kualitas kesehatan masyarakat, Pemerintah Desa mengumumkan jadwal Posyandu bulan Desember.</p>
-      <p>Diharapkan ibu-ibu yang memiliki balita untuk rutin membawa anaknya guna pemantauan tumbuh kembang dan pemberian vitamin A.</p>
-      <p>Untuk Lansia, pemeriksaan kesehatan gratis meliputi cek tensi, gula darah, dan asam urat akan dilaksanakan di Balai Banjar masing-masing.</p>
-    `
-  },
-  // Kalau ID tidak ada di sini, nanti muncul "Berita Tidak Ditemukan"
-];
+// Fungsi untuk mengambil data artikel dari API
+async function getArticleData(id) {
+  
+  // Ambil URL langsung dari environment variable (paling aman untuk Server Component)
+  const BASE_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+  
+  try {
+    const response = await fetch(`${BASE_API_URL}/articles/${id}`, {
+      // Menggunakan cache: 'no-store' agar server selalu mengambil data terbaru 
+      // saat halaman di-request ulang (berguna saat development)
+      cache: 'no-store' 
+    });
 
-export default async function DetailBerita({ params }) {
-  // 1. Tangkap ID dari URL (misal: /berita/1 -> id = 1)
-  const { id } = await params;
+    if (response.status === 404) {
+      return null; 
+    }
 
-  // 2. Cari data berita yang cocok dengan ID tersebut
-  const data = newsDatabase.find((item) => item.id === id);
+    if (!response.ok) {
+      console.error(`Gagal mengambil data dari API: Status ${response.status}`);
+      return null;
+    }
 
-  // 3. Kalau berita tidak ditemukan (misal orang ketik /berita/999)
-  if (!data) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 text-center px-4">
-        <h1 className="text-4xl font-bold text-gray-300 mb-4">404</h1>
-        <p className="text-gray-600 text-lg mb-6">Maaf, berita yang kamu cari tidak ditemukan.</p>
-        <Link href="/berita" className="text-green-600 hover:underline">Kembali ke Kabar Desa</Link>
-      </div>
-    );
+    const data = await response.json();
+    return data;
+    
+  } catch (error) {
+    console.error("Error fetching article:", error);
+    return null;
   }
+}
 
-  // 4. Kalau ketemu, Tampilkan Template Beritanya
+export default async function DetailBerita(props) {
+  
+  // 🛑 FIX UTAMA UNTUK MENGATASI ERROR RUNTIME:
+  // Akses params.id secara langsung dari props untuk menghindari desctructuring 
+  // yang bermasalah di Server Component Next.js/Turbopack.
+  const id = props.params?.id;
+
+  // 1. Jika ID tidak ada atau undefined, kembalikan 404
+  if (!id) {
+    notFound(); 
+  }
+  
+  // 2. Ambil data berita dari API
+  const data = await getArticleData(id);
+
+  // 3. Jika data tidak ditemukan (misal API mengembalikan null atau 404)
+  if (!data) {
+    notFound(); // Menggunakan fungsi notFound() dari Next.js
+  }
+  
+  // 4. Tampilkan Konten
   return (
     <main className="bg-white min-h-screen pb-20">
       
       {/* GAMBAR UTAMA (Hero Image) */}
       <div className="w-full h-[400px] bg-gray-200 relative">
-        <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-          [Gambar Utama Berita: {data.title}]
-        </div>
+        
+        {/* Menggunakan data.image_url yang sudah diformat lengkap oleh Laravel */}
+        {data.image_url ? (
+            <Image 
+                src={data.image_url} 
+                alt={data.title || "Gambar Utama Berita"} 
+                fill 
+                sizes="100vw"
+                className="object-cover"
+                priority 
+            />
+        ) : (
+             <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                [Gambar Utama Berita Tidak Tersedia]
+            </div>
+        )}
       </div>
 
       {/* KONTEN ARTIKEL */}
@@ -80,7 +99,7 @@ export default async function DetailBerita({ params }) {
           <div className="flex items-center gap-6 text-sm text-gray-500 border-b border-gray-100 pb-8 mb-8">
             <div className="flex items-center gap-2">
               <span className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">👤</span>
-              {data.author}
+              {data.author || "Admin Desa"} 
             </div>
             <div>📅 {data.date}</div>
           </div>
@@ -88,10 +107,9 @@ export default async function DetailBerita({ params }) {
           {/* Isi Berita (Render HTML) */}
           <div 
             className="prose prose-lg text-gray-600 leading-relaxed max-w-none"
-            dangerouslySetInnerHTML={{ __html: data.content }}
+            // Menggunakan data.content atau data.desc dari API Laravel
+            dangerouslySetInnerHTML={{ __html: data.content || data.desc }} 
           />
-           {/* 'dangerouslySetInnerHTML' dipakai agar tag <p> di data dummy terbaca sebagai paragraf */}
-
         </div>
 
         {/* Tombol Kembali */}

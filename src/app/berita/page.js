@@ -1,3 +1,5 @@
+// File: src/app/berita/page.js
+
 "use client";
 
 import Image from "next/image";
@@ -5,13 +7,22 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 
+// Definisikan URL API dari environment variable (.env.local)
+// Pastikan NEXT_PUBLIC_API_URL disetel (misalnya: http://localhost:8000/api)
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function Berita() {
   /* ================= STATE ================= */
   const [scrolled, setScrolled] = useState(false);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
 
-  /* ================= DUMMY BACKEND ================= */
+  // State baru untuk menyimpan data berita yang diambil dari API
+  const [newsItems, setNewsItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  /* ================= DUMMY BACKEND (Kategori) ================= */
   const categories = [
     "Pemerintahan",
     "Kesehatan",
@@ -21,50 +32,39 @@ export default function Berita() {
     "Adat",
   ];
 
-  const newsItems = [
-    {
-      id: 1,
-      category: "Pemerintahan",
-      date: "08 Des 2025",
-      title: "Musyawarah Perencanaan Pembangunan Desa 2025",
-      desc: "Pemdes mengundang seluruh elemen masyarakat untuk berpartisipasi dalam merancang masa depan desa...",
-    },
-    {
-      id: 2,
-      category: "Kesehatan",
-      date: "06 Des 2025",
-      title: "Jadwal Posyandu Balita & Lansia Bulan Desember",
-      desc: "Cek jadwal lengkap kegiatan Posyandu di setiap dusun. Jangan lupa bawa buku KIA...",
-    },
-    {
-      id: 3,
-      category: "Ekonomi",
-      date: "01 Des 2025",
-      title: "Pelatihan Digital Marketing untuk UMKM Desa",
-      desc: "Meningkatkan daya saing produk lokal kerajinan bambu melalui pemasaran digital...",
-    },
-    {
-      id: 4,
-      category: "Pembangunan",
-      date: "28 Nov 2025",
-      title: "Perbaikan Jalan Usaha Tani Dusun Kangin",
-      desc: "Pengecoran jalan sepanjang 500m telah selesai dilaksanakan secara gotong royong...",
-    },
-    {
-      id: 5,
-      category: "Sosial",
-      date: "25 Nov 2025",
-      title: "Penyaluran BLT Dana Desa Tahap Akhir",
-      desc: "Penyaluran bantuan langsung tunai berjalan lancar dan tepat sasaran di Balai Desa...",
-    },
-    {
-      id: 6,
-      category: "Adat",
-      date: "20 Nov 2025",
-      title: "Persiapan Upacara Piodalan Pura Desa",
-      desc: "Masyarakat mulai melakukan ngayah mempersiapkan sarana upakara untuk piodalan...",
-    },
-  ];
+  /* ================= API FETCHING ================= */
+  useEffect(() => {
+    const fetchNews = async () => {
+      // Cek apakah API_BASE_URL sudah didefinisikan
+      if (!API_BASE_URL) {
+        console.error("NEXT_PUBLIC_API_URL tidak didefinisikan!");
+        setError("API URL tidak ditemukan. Pastikan .env.local sudah disetel dan server di-restart.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // MENGGUNAKAN ENDPOINT LARAVEL: /articles
+        const response = await fetch(`${API_BASE_URL}/articles`); 
+        
+        if (!response.ok) {
+          // Status error selain 404 (misal: 500 Server Error)
+          throw new Error(`Gagal mengambil data. Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setNewsItems(data); // Set state newsItems dengan data dari API
+        setLoading(false);
+      } catch (err) {
+        console.error("Gagal mengambil data berita:", err);
+        // Menampilkan error dari CORS/Network atau status 500
+        setError(err.message); 
+        setLoading(false);
+      }
+    };
+
+    fetchNews();
+  }, []); // Array dependensi kosong: agar fetchNews hanya berjalan sekali saat komponen dimuat
 
   /* ================= SCROLL NAVBAR ================= */
   useEffect(() => {
@@ -74,14 +74,41 @@ export default function Berita() {
   }, []);
 
   /* ================= FILTER ================= */
+  // Filter akan otomatis bekerja pada data newsItems yang sudah di-fetch
   const filteredNews = newsItems.filter((item) => {
     const matchCategory = category ? item.category === category : true;
+    // Pastikan item memiliki title dan desc, atau tambahkan fallback
     const matchSearch =
-      item.title.toLowerCase().includes(search.toLowerCase()) ||
-      item.desc.toLowerCase().includes(search.toLowerCase());
+      (item.title?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (item.desc?.toLowerCase() || "").includes(search.toLowerCase());
     return matchCategory && matchSearch;
   });
+  
+  // ================= RENDER PENANGANAN STATUS ================= 
+  if (loading) {
+    return (
+      <>
+        <Navbar scrolled={scrolled} />
+        <main className="bg-gray-100 min-h-screen pt-40 pb-24 text-center">
+          <p className="text-xl text-gray-700">Memuat berita...</p>
+        </main>
+      </>
+    );
+  }
 
+  if (error) {
+    return (
+      <>
+        <Navbar scrolled={scrolled} />
+        <main className="bg-gray-100 min-h-screen pt-40 pb-24 text-center">
+          <p className="text-xl text-red-600">Terjadi kesalahan saat memuat data: {error}</p>
+          <p className="text-gray-500">Cek server Laravel Anda dan konfigurasi CORS.</p>
+        </main>
+      </>
+    );
+  }
+  
+  // ================= RENDER UTAMA ================= 
   return (
     <>
       <Navbar scrolled={scrolled} />
@@ -144,23 +171,32 @@ export default function Berita() {
         {/* ================= LIST BERITA ================= */}
         <section className="max-w-7xl mx-auto px-6 -mt-16 relative z-20">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredNews.map((item) => (
-              <NewsCard key={item.id} data={item} />
-            ))}
+            {filteredNews.length > 0 ? (
+              filteredNews.map((item) => (
+                <NewsCard key={item.id} data={item} />
+              ))
+            ) : (
+              <div className="md:col-span-2 lg:col-span-3 text-center py-10 bg-white rounded-xl shadow-md">
+                <p className="text-gray-500">
+                  {/* Tampilkan pesan jika tidak ada berita dari API atau hasil filter kosong */}
+                  {newsItems.length === 0 ? "Belum ada berita yang tersedia dari API." : "Tidak ditemukan berita untuk kriteria pencarian ini."}
+                </p>
+              </div>
+            )}
           </div>
 
-          {/* ================= PAGINATION ================= */}
+          {/* ================= PAGINATION (Dummy) ================= */}
           <div className="mt-14 flex justify-center gap-2">
-            <button className="px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-600 hover:bg-gray-100">
+            <button className="px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-600 hover:bg-gray-100 disabled:opacity-50" disabled>
               Sebelumnya
             </button>
             <button className="px-4 py-2 bg-green-700 text-white rounded-md">
               1
             </button>
-            <button className="px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-600 hover:bg-gray-100">
+            <button className="px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-600 hover:bg-gray-100 disabled:opacity-50" disabled>
               2
             </button>
-            <button className="px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-600 hover:bg-gray-100">
+            <button className="px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-600 hover:bg-gray-100 disabled:opacity-50" disabled>
               Selanjutnya
             </button>
           </div>
@@ -170,12 +206,22 @@ export default function Berita() {
   );
 }
 
-/* ================= CARD BERITA ================= */
+/* ================= CARD BERITA (MODIFIED FOR IMAGE) ================= */
 function NewsCard({ data }) {
+  // Asumsi: data dari Laravel memiliki field 'image_url'
+  const imageUrl = data.image_url || "/hero-buleleng.jpg"; 
+
   return (
     <article className="bg-white rounded-md overflow-hidden shadow-sm border border-gray-200 hover:shadow-lg transition flex flex-col">
-      <div className="h-52 bg-gray-200 flex items-center justify-center text-gray-400 text-sm">
-        [Gambar Berita]
+      {/* BAGIAN GAMBAR - Menggunakan Next/Image */}
+      <div className="relative h-52 w-full bg-gray-200">
+        <Image 
+          src={imageUrl} 
+          alt={data.title || "Gambar Berita"} 
+          fill 
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="object-cover"
+        />
       </div>
 
       <div className="p-6 flex flex-col flex-grow">
