@@ -82,14 +82,10 @@ const useNewsStore = create((set, get) => ({
    */
   fetchCategories: async () => {
     try {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .order('name', { ascending: true });
+      let response = await fetch('/api/v1/categories');
+      response = await response.json();
 
-      if (error) throw error;
-
-      set({ categories: data });
+      set({ categories: response.data });
     } catch (err) {
       console.error("Error Kategori:", err.message);
     }
