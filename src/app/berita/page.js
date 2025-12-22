@@ -2,19 +2,20 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, Suspense } from "react"; // 1. Tambah Suspense
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import useNewsStore from "@/store/useNewsStore";
 import useDebounce from "@/hooks/useDebounce";
 
-export default function Berita() {
+// 2. Logika Utama dipindah ke "BeritaContent"
+function BeritaContent() {
   const [scrolled, setScrolled] = useState(false);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
 
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams(); // Aman digunakan di sini karena dibungkus Suspense
 
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 6;
@@ -68,7 +69,6 @@ export default function Berita() {
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentNews = filteredNews.slice(indexOfFirstPost, indexOfLastPost);
-  const totalPages = Math.ceil(filteredNews.length / postsPerPage);
 
   const fadeInUp = {
     hidden: { opacity: 0, y: 20 },
@@ -135,6 +135,15 @@ export default function Berita() {
         </section>
       </main>
     </>
+  );
+}
+
+// 3. Export Default HANYA membungkus dengan Suspense
+export default function Berita() {
+  return (
+    <Suspense fallback={<div className="h-screen w-full flex items-center justify-center">Loading Halaman...</div>}>
+      <BeritaContent />
+    </Suspense>
   );
 }
 
