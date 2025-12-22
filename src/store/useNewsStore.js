@@ -34,7 +34,7 @@ const useNewsStore = create((set, get) => ({
     try {
       // Ambil data posts dan join dengan tabel categories
       const { data, error } = await supabase
-        .from('articlesS')
+        .from('articles')
         .select(`
           *,
           categories (
