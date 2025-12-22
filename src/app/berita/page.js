@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion"; 
+import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import useNewsStore from "@/store/useNewsStore";
 import useDebounce from "@/hooks/useDebounce";
@@ -12,17 +12,16 @@ export default function Berita() {
   const [scrolled, setScrolled] = useState(false);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
-  
-  /* ================= STATE PAGINATION ================= */
+
   const [currentPage, setCurrentPage] = useState(1);
-  const postsPerPage = 6; // Menampilkan 6 kartu per halaman
+  const postsPerPage = 6;
 
   const debouncedSearch = useDebounce(search, 500);
   const { news, categories, loading, fetchNews, fetchCategories } = useNewsStore();
 
   useEffect(() => {
     fetchCategories();
-    fetchNews(); 
+    fetchNews();
   }, [fetchCategories, fetchNews]);
 
   useEffect(() => {
@@ -31,27 +30,26 @@ export default function Berita() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  /* ================= LOGIKA FILTER & PAGINATION ================= */
+  /* ================= FIX LOGIKA FILTER ================= */
   const filteredNews = useMemo(() => {
     if (!news) return [];
-    
+
     return news.filter((item) => {
-      const matchesSearch = item.title.toLowerCase().includes(debouncedSearch.toLowerCase());
-      const matchesCategory = category === "" || 
-                              String(item.category_id) === String(category) || 
-                              String(item.category) === String(category) ||
-                              item.category_name === category;
+      // Pastikan title tidak null
+      const matchesSearch = (item.title || "").toLowerCase().includes(debouncedSearch.toLowerCase());
+
+      // Supabase biasanya mengembalikan ID sebagai string atau number. 
+      // Kita pastikan perbandingan tipe datanya konsisten.
+      const matchesCategory = category === "" || String(item.category_id) === String(category);
 
       return matchesSearch && matchesCategory;
     });
   }, [news, debouncedSearch, category]);
 
-  // Reset ke halaman 1 saat filter atau pencarian berubah
   useEffect(() => {
     setCurrentPage(1);
   }, [debouncedSearch, category]);
 
-  // Hitung data yang ditampilkan berdasarkan halaman aktif
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentNews = filteredNews.slice(indexOfFirstPost, indexOfLastPost);
@@ -66,6 +64,7 @@ export default function Berita() {
     <>
       <Navbar scrolled={scrolled} />
       <main className="bg-gray-100 min-h-screen pb-24">
+        {/* Hero Section tetap sama */}
         <section className="relative pt-28 pb-24 px-6 text-center text-white overflow-hidden">
           <Image src="/hero-buleleng-3.jpg" alt="Desa Sangket" fill priority className="object-cover" />
           <div className="absolute inset-0 bg-green-900/50" />
@@ -73,7 +72,7 @@ export default function Berita() {
             <motion.h1 initial="hidden" animate="visible" variants={fadeInUp} className="text-4xl md:text-5xl font-bold mb-4">
               Kabar Desa
             </motion.h1>
-            
+
             <div className="bg-white p-4 rounded-xl shadow-md">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <select
@@ -107,8 +106,8 @@ export default function Berita() {
         <section className="max-w-7xl mx-auto px-6 -mt-16 relative z-20">
           <AnimatePresence mode="wait">
             {loading ? (
-              <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-20 bg-white/80 rounded-xl shadow-sm">
-                 <p className="text-green-700 font-semibold animate-pulse">Memperbarui daftar berita...</p>
+              <motion.div key="loading" className="text-center py-20 bg-white/80 rounded-xl shadow-sm">
+                <p className="text-green-700 font-semibold animate-pulse">Memperbarui daftar berita...</p>
               </motion.div>
             ) : currentNews.length > 0 ? (
               <>
@@ -118,26 +117,22 @@ export default function Berita() {
                   ))}
                 </motion.div>
 
-                {/* ================= UI PAGINATION ================= */}
+                {/* Pagination UI tetap sama */}
                 {totalPages > 1 && (
                   <div className="flex justify-center items-center mt-16 gap-3">
-                    {/* Tombol Sebelumnya */}
                     <button
                       onClick={() => {
                         setCurrentPage(prev => Math.max(prev - 1, 1));
                         window.scrollTo({ top: 400, behavior: 'smooth' });
                       }}
                       disabled={currentPage === 1}
-                      className={`px-4 py-2 rounded-lg font-medium transition-all border ${
-                        currentPage === 1 
-                        ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed" 
-                        : "bg-white text-green-700 border-gray-200 hover:border-green-600 active:scale-95"
-                      }`}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all border ${currentPage === 1
+                          ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                          : "bg-white text-green-700 border-gray-200 hover:border-green-600 active:scale-95"
+                        }`}
                     >
                       ← Sebelumnya
                     </button>
-
-                    {/* Angka Halaman */}
                     <div className="flex gap-2">
                       {Array.from({ length: totalPages }, (_, i) => (
                         <button
@@ -146,29 +141,25 @@ export default function Berita() {
                             setCurrentPage(i + 1);
                             window.scrollTo({ top: 400, behavior: 'smooth' });
                           }}
-                          className={`w-10 h-10 rounded-lg font-bold transition-all border ${
-                            currentPage === i + 1 
-                            ? "bg-green-700 text-white border-green-700 shadow-md scale-105" 
-                            : "bg-white text-gray-600 border-gray-200 hover:border-green-600"
-                          }`}
+                          className={`w-10 h-10 rounded-lg font-bold transition-all border ${currentPage === i + 1
+                              ? "bg-green-700 text-white border-green-700 shadow-md scale-105"
+                              : "bg-white text-gray-600 border-gray-200 hover:border-green-600"
+                            }`}
                         >
                           {i + 1}
                         </button>
                       ))}
                     </div>
-
-                    {/* Tombol Berikutnya */}
                     <button
                       onClick={() => {
                         setCurrentPage(prev => Math.min(prev + 1, totalPages));
                         window.scrollTo({ top: 400, behavior: 'smooth' });
                       }}
                       disabled={currentPage === totalPages}
-                      className={`px-4 py-2 rounded-lg font-medium transition-all border ${
-                        currentPage === totalPages 
-                        ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed" 
-                        : "bg-white text-green-700 border-gray-200 hover:border-green-600 active:scale-95"
-                      }`}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all border ${currentPage === totalPages
+                          ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                          : "bg-white text-green-700 border-gray-200 hover:border-green-600 active:scale-95"
+                        }`}
                     >
                       Berikutnya →
                     </button>
@@ -176,7 +167,7 @@ export default function Berita() {
                 )}
               </>
             ) : (
-              <motion.div key="empty" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-16 bg-white rounded-xl shadow-md">
+              <motion.div key="empty" className="text-center py-16 bg-white rounded-xl shadow-md">
                 <p className="text-gray-500">Berita tidak ditemukan.</p>
               </motion.div>
             )}
@@ -187,31 +178,44 @@ export default function Berita() {
   );
 }
 
+/* ================= FIX NEWSCARD UNTUK SUPABASE ================= */
 function NewsCard({ data }) {
   const getImageUrl = useNewsStore((state) => state.getImageUrl);
-  const categories = useNewsStore((state) => state.categories);
 
-  const categoryData = categories.find(cat => 
-    String(cat.id) === String(data.category_id) || String(cat.id) === String(data.category)
-  );
-  const categoryDisplay = categoryData?.name || data.category_name || data.category || "Umum";
+  // Karena kita menggunakan .select('*, categories(name)') di Supabase,
+  // Nama kategori biasanya ada di data.categories.name
+  const categoryDisplay = data.categories?.name || "Umum";
 
   return (
-    <motion.article 
+    <motion.article
       layout
       whileHover={{ y: -10 }}
       className="bg-white rounded-md overflow-hidden shadow-sm border border-gray-200 hover:shadow-2xl transition-all flex flex-col h-full group"
     >
       <Link href={`/berita/${data.id}`} className="flex flex-col h-full">
         <div className="relative h-52 w-full bg-gray-200 overflow-hidden">
-          <Image src={getImageUrl(data.image)} alt={data.title} fill unoptimized className="object-cover group-hover:scale-110 transition-transform duration-700" />
+          {/* Unoptimized ditambahkan karena domain Supabase berbeda dengan domain web Anda */}
+          <Image
+            src={getImageUrl(data.image)}
+            alt={data.title || "Berita"}
+            fill
+            unoptimized
+            className="object-cover group-hover:scale-110 transition-transform duration-700"
+          />
         </div>
         <div className="p-6 flex flex-col flex-grow">
           <div className="flex items-center gap-3 mb-3 text-xs font-semibold">
-            <span className="bg-green-100 text-green-700 px-2 py-1 rounded-sm uppercase tracking-wider">{categoryDisplay}</span>
+            <span className="bg-green-100 text-green-700 px-2 py-1 rounded-sm uppercase tracking-wider">
+              {categoryDisplay}
+            </span>
           </div>
-          <h3 className="text-lg font-bold text-gray-800 mb-3 leading-snug group-hover:text-green-700 transition-colors line-clamp-2">{data.title}</h3>
-          <p className="text-gray-600 text-sm line-clamp-3 mb-5 flex-grow text-justify">{data.desc || data.content?.replace(/<[^>]*>?/gm, '').substring(0, 120)}...</p>
+          <h3 className="text-lg font-bold text-gray-800 mb-3 leading-snug group-hover:text-green-700 transition-colors line-clamp-2">
+            {data.title}
+          </h3>
+          <p className="text-gray-600 text-sm line-clamp-3 mb-5 flex-grow text-justify">
+            {/* Bersihkan tag HTML jika konten diambil dari text editor */}
+            {data.desc || (data.content ? data.content.replace(/<[^>]*>?/gm, '').substring(0, 120) : "Tidak ada deskripsi...")}
+          </p>
           <span className="text-green-700 font-semibold text-sm group-hover:underline mt-auto">Baca Selengkapnya →</span>
         </div>
       </Link>

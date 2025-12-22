@@ -1,3 +1,4 @@
+
 import Footer from "@/components/Footer";
 import "./globals.css";
 import Navbar from "@/components/Navbar"; // 1. Import Navbar
@@ -6,6 +7,8 @@ export const metadata = {
   title: "Desa Sangket",
   description: "Website Pemerintahan Desa Sangket yang Maju dan Transparan",
 };
+
+
 
 export default function RootLayout({ children }) {
   return (

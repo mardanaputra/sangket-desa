@@ -1,9 +1,7 @@
 import { create } from 'zustand';
+import { supabase } from '@/utils/supabase/client'; // Pastikan path helper benar
 
-// Mengambil URL API dari environment variable (Next.js)
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
-
-const useNewsStore = create((set) => ({
+const useNewsStore = create((set, get) => ({
   /* ================= STATE ================= */
   news: [],
   singleNews: null,
@@ -14,50 +12,41 @@ const useNewsStore = create((set) => ({
   /* ================= ACTIONS ================= */
 
   /**
-   * Fungsi Helper untuk memproses URL gambar.
-   * Membersihkan path agar kompatibel dengan Route API Laravel.
+   * Mengambil URL gambar dari Supabase Storage.
    */
   getImageUrl: (path) => {
-    // 1. Jika path kosong, gunakan gambar default
-    if (!path) return "/hero-buleleng.jpg"; 
-    
-    // 2. Jika path sudah berupa URL lengkap, langsung kembalikan
-    if (path.toString().startsWith('http')) return path; 
-    
-    /**
-     * 3. Pembersihan Path:
-     * - Mengubah backslash (\) menjadi forward slash (/)
-     * - Menghapus awalan 'public/' jika tersimpan di database
-     */
-    const cleanPath = path.toString()
-      .replace(/\\/g, '/')
-      .replace(/^public\//, "");
+    if (!path) return "/hero-buleleng.jpg";
+    if (path.toString().startsWith('http')) return path;
 
-    /**
-     * 4. Mengarahkan ke endpoint khusus Laravel:
-     * Browser akan menangani encoding spasi secara otomatis.
-     */
-    return `${API_BASE_URL}/image/${cleanPath}`;
+    // Ganti 'news_images' dengan nama BUCKET di Supabase Storage Anda
+    const { data } = supabase.storage
+      .from('news_images')
+      .getPublicUrl(path);
+
+    return data.publicUrl;
   },
 
   /**
-   * Ambil daftar berita dengan filter pencarian & kategori.
+   * Ambil daftar berita dari tabel 'posts' di Supabase.
    */
-  fetchNews: async (params = {}) => {
+  fetchNews: async () => {
     set({ loading: true, error: null });
     try {
-      const { search = "", category = "" } = params;
-      
-      // Menggunakan URLSearchParams agar query string lebih aman
-      const query = new URLSearchParams({ search, category }).toString();
-      const response = await fetch(`${API_BASE_URL}/articles?${query}`);
-      
-      if (!response.ok) throw new Error("Gagal mengambil daftar berita");
-      
-      const data = await response.json();
-      
-      // Mendukung response pagination Laravel (data.data) atau array langsung
-      set({ news: data.data || data, loading: false });
+      // Ambil data posts dan join dengan tabel categories
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          categories (
+            id,
+            name
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      set({ news: data, loading: false });
     } catch (err) {
       set({ error: err.message, loading: false });
     }
@@ -69,10 +58,19 @@ const useNewsStore = create((set) => ({
   fetchNewsById: async (id) => {
     set({ loading: true, error: null, singleNews: null });
     try {
-      const response = await fetch(`${API_BASE_URL}/articles/${id}`);
-      if (!response.ok) throw new Error("Berita tidak ditemukan");
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          categories (
+            name
+          )
+        `)
+        .eq('id', id)
+        .single(); // Ambil satu data saja
 
-      const data = await response.json();
+      if (error) throw error;
+
       set({ singleNews: data, loading: false });
     } catch (err) {
       set({ error: err.message, loading: false });
@@ -80,23 +78,23 @@ const useNewsStore = create((set) => ({
   },
 
   /**
-   * Ambil daftar kategori dinamis dari Laravel.
+   * Ambil daftar kategori dari tabel 'categories'.
    */
   fetchCategories: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/categories`);
-      if (!response.ok) throw new Error("Gagal mengambil kategori");
-      
-      const data = await response.json();
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+
       set({ categories: data });
     } catch (err) {
       console.error("Error Kategori:", err.message);
     }
   },
 
-  /**
-   * Membersihkan data detail saat pindah halaman.
-   */
   clearSingleNews: () => set({ singleNews: null, error: null })
 }));
 
