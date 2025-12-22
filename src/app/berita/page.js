@@ -50,19 +50,23 @@ export default function Berita() {
   }, []);
 
   const filteredNews = useMemo(() => {
-    const s = debouncedSearch.trim().toLowerCase();
+    if (!Array.isArray(news)) return [];
 
-    return safeNews.filter((item) => {
-      const title = (item.title || "").toLowerCase();
-      const matchesSearch = title.includes(s);
+    return news.filter((item) => {
+      const matchesSearch = (item.title || "")
+        .toLowerCase()
+        .includes(debouncedSearch.toLowerCase());
 
-      // pakai string konsisten
-      const itemCatId = item.category_id != null ? String(item.category_id) : "";
-      const matchesCategory = category === "" || itemCatId === String(category);
+      // ✅ pakai relasi categories.id
+      const itemCategoryId = item.categories?.id;
+
+      const matchesCategory =
+        category === "" || String(itemCategoryId) === String(category);
 
       return matchesSearch && matchesCategory;
     });
-  }, [safeNews, debouncedSearch, category]);
+  }, [news, debouncedSearch, category]);
+
 
   useEffect(() => {
     setCurrentPage(1);
@@ -165,8 +169,8 @@ export default function Berita() {
                       }}
                       disabled={currentPage === 1}
                       className={`px-4 py-2 rounded-lg font-medium transition-all border ${currentPage === 1
-                          ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                          : "bg-white text-green-700 border-gray-200 hover:border-green-600 active:scale-95"
+                        ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                        : "bg-white text-green-700 border-gray-200 hover:border-green-600 active:scale-95"
                         }`}
                     >
                       ← Sebelumnya
@@ -181,8 +185,8 @@ export default function Berita() {
                             window.scrollTo({ top: 400, behavior: "smooth" });
                           }}
                           className={`w-10 h-10 rounded-lg font-bold transition-all border ${currentPage === i + 1
-                              ? "bg-green-700 text-white border-green-700 shadow-md scale-105"
-                              : "bg-white text-gray-600 border-gray-200 hover:border-green-600"
+                            ? "bg-green-700 text-white border-green-700 shadow-md scale-105"
+                            : "bg-white text-gray-600 border-gray-200 hover:border-green-600"
                             }`}
                         >
                           {i + 1}
@@ -197,8 +201,8 @@ export default function Berita() {
                       }}
                       disabled={currentPage === totalPages}
                       className={`px-4 py-2 rounded-lg font-medium transition-all border ${currentPage === totalPages
-                          ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                          : "bg-white text-green-700 border-gray-200 hover:border-green-600 active:scale-95"
+                        ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                        : "bg-white text-green-700 border-gray-200 hover:border-green-600 active:scale-95"
                         }`}
                     >
                       Berikutnya →
