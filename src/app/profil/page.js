@@ -270,7 +270,7 @@ export default function Profil() {
               <div className="w-full h-[400px] rounded-2xl overflow-hidden shadow-inner border-2 border-gray-50">
                 <iframe
                   title="Peta Desa Sangket"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15783.31505307328!2d115.0872651!3d-8.1234567!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zOMKwMDcnMjQuNCJTIDExNcKwMDUnMTQuMiJF!5e0!3m2!1sid!2sid!4v1624450000000!5m2!1sid!2sid"
+                  src="https://www.google.com/maps/search/desa+sangket/@-8.1513891,115.0978328,15.63z/data=!4m2!2m1!6e1?entry=ttu&g_ep=EgoyMDI1MTIwOS4wIKXMDSoASAFQAw%3D%3D"
                   width="100%"
                   height="100%"
                   loading="lazy"
