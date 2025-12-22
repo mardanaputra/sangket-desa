@@ -1,7 +1,4 @@
-import { create } from 'zustand';
-
-// HAPUS import supabase client dari sini agar "clean"
-// import { supabase } from '@/utils/supabase/client'; 
+import { create } from "zustand";
 
 const useNewsStore = create((set, get) => ({
   /* ================= STATE ================= */
@@ -11,87 +8,101 @@ const useNewsStore = create((set, get) => ({
   loading: false,
   error: null,
 
-  /* ================= ACTIONS ================= */
-
-  /**
-   * Mengambil URL gambar.
-   * Karena kita melepas supabase client, kita construct URL manual.
-   * Pastikan ganti PROJECT_REF dengan ID project supabase kamu.
-   */
+  /* ================= HELPERS ================= */
   getImageUrl: (path) => {
     if (!path) return "/hero-buleleng.jpg";
-    if (path.toString().startsWith('http')) return path;
+    if (String(path).startsWith("http")) return String(path);
 
-    // Ganti dengan URL Project Supabase kamu
-    // Format: https://[PROJECT_REF].supabase.co/storage/v1/object/public/[BUCKET_NAME]/[PATH]
-    const PROJECT_URL = process.env.NEXT_PUBLIC_SUPABASE_URL; 
-    const BUCKET_NAME = 'news_images'; 
-    
-    // Jika path belum full URL, gabungkan
+    const PROJECT_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const BUCKET_NAME = "news_images";
+
+    if (!PROJECT_URL) return "/hero-buleleng.jpg";
+
     return `${PROJECT_URL}/storage/v1/object/public/${BUCKET_NAME}/${path}`;
   },
 
-  /**
-   * Ambil daftar berita via API Next.js (Server Side)
-   */
+  /* ================= ACTIONS ================= */
+
+  // Ambil daftar berita
   fetchNews: async () => {
     set({ loading: true, error: null });
     try {
-      // Panggil API Route kita sendiri
-      const response = await fetch('/api/v1/articles');
-      
-      if (!response.ok) {
-        throw new Error(`Gagal mengambil data: ${response.statusText}`);
-      }
+      const res = await fetch("/api/v1/articles", { cache: "no-store" });
 
-      const data = await response.json();
-      set({ news: data, loading: false });
+      if (!res.ok) throw new Error(`Gagal mengambil berita: ${res.status} ${res.statusText}`);
 
+      const data = await res.json();
+
+      set({
+        news: Array.isArray(data) ? data : [],
+        loading: false,
+      });
     } catch (err) {
-      set({ error: err.message, loading: false });
+      set({
+        news: [],
+        error: err?.message || "Terjadi kesalahan saat mengambil berita",
+        loading: false,
+      });
     }
   },
 
-  /**
-   * Ambil detail berita berdasarkan ID via API Next.js
-   */
+  // Ambil detail berita by id
   fetchNewsById: async (id) => {
+    if (!id) return;
+
     set({ loading: true, error: null, singleNews: null });
     try {
-      // Panggil API Route Dynamic [id]
-      const response = await fetch(`/api/v1/articles/${id}`);
+      // rekomendasi: buat route detail -> /api/v1/articles/[id]
+      const res = await fetch(`/api/v1/articles/${id}`, { cache: "no-store" });
 
-      if (!response.ok) {
-        throw new Error('Artikel tidak ditemukan');
+      if (!res.ok) {
+        throw new Error(`Gagal mengambil detail berita: ${res.status} ${res.statusText}`);
       }
 
-      const data = await response.json();
-      set({ singleNews: data, loading: false });
+      const data = await res.json();
 
+      set({
+        singleNews: data || null,
+        loading: false,
+      });
     } catch (err) {
-      set({ error: err.message, loading: false });
+      set({
+        singleNews: null,
+        error: err?.message || "Terjadi kesalahan saat mengambil detail berita",
+        loading: false,
+      });
     }
   },
 
-  /**
-   * Ambil daftar kategori via API
-   */
+  // Ambil kategori
   fetchCategories: async () => {
     try {
-      // Sesuaikan path ini dengan lokasi file route categories kamu
-      // Misalnya: app/api/categories/route.ts -> '/api/categories'
-      const response = await fetch('/api/v1/categories');
-      
-      if (!response.ok) throw new Error("Gagal load kategori");
-      
-      const data = await response.json();
-      set({ categories: data });
+      const res = await fetch("/api/v1/categories", { cache: "no-store" });
+
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        throw new Error(`Gagal load kategori: ${res.status} ${res.statusText} ${txt}`);
+      }
+
+      const json = await res.json();
+
+      // ✅ support banyak bentuk response
+      const cats =
+        Array.isArray(json) ? json :
+          Array.isArray(json?.data) ? json.data :
+            Array.isArray(json?.categories) ? json.categories :
+              [];
+
+      set({ categories: cats });
+
     } catch (err) {
-      console.error("Error Kategori:", err.message);
+      console.error("Error Kategori:", err);
+      set({ categories: [] });
     }
   },
 
-  clearSingleNews: () => set({ singleNews: null, error: null })
+
+  clearSingleNews: () => set({ singleNews: null, error: null }),
 }));
 
 export default useNewsStore;
