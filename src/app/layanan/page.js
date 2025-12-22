@@ -6,12 +6,8 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 
 // =========================================================================
-// METADATA (AMAN: TIDAK DIUBAH)
+// DATA LAYANAN (STATIS)
 // =========================================================================
-
-// =========================================================================
-
-// Data layanan list
 const layananList = [
   {
     title: "Surat Keterangan Usaha",
@@ -87,9 +83,6 @@ const layananList = [
 ];
 
 export default function Layanan() {
-  // ======================================================
-  // SCROLL NAVBAR (TRANSPARAN → PUTIH)
-  // ======================================================
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -100,13 +93,10 @@ export default function Layanan() {
 
   return (
     <>
-      {/* NAVBAR (TIDAK DIUBAH FITURNYA) */}
       <Navbar scrolled={scrolled} />
 
       <main className="bg-gray-50 min-h-screen pb-20">
-        {/* ======================================================
-            HERO SECTION (FOTO GANTI WARNA HIJAU)
-        ====================================================== */}
+        {/* ================= HERO SECTION ================= */}
         <section className="relative pt-28 pb-32 px-6 text-center text-white overflow-hidden">
           <Image
             src="/hero-buleleng-2.webp"
@@ -115,7 +105,7 @@ export default function Layanan() {
             priority
             className="object-cover"
           />
-          <div className="absolute inset-0 bg-black/55" />
+          <div className="absolute inset-0 bg-black/30" />
 
           <div className="relative z-10 max-w-4xl mx-auto">
             <h1 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">
@@ -128,12 +118,11 @@ export default function Layanan() {
           </div>
         </section>
 
-        {/* ======================================================
-            KONTEN UTAMA
-        ====================================================== */}
+        {/* ================= KONTEN UTAMA ================= */}
         <div className="max-w-6xl mx-auto px-6 -mt-16 relative z-10">
-          {/* INFO JAM KERJA */}
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-10 border-l-4 border-green-600 flex flex-col md:flex-row items-center justify-between gap-4">
+          
+          {/* 1. INFO JAM KERJA */}
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-4 border-l-4 border-green-600 flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
               <h3 className="text-lg font-bold text-gray-800">
                 Jam Pelayanan Kantor
@@ -152,7 +141,27 @@ export default function Layanan() {
             </Link>
           </div>
 
-          {/* GRID LAYANAN */}
+          {/* 2. PEMBAYARAN IURAN KRAMA (KOTAK BARU) */}
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-10 border-l-4 border-green-600 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-bold text-gray-800">
+                Pembayaran Iuran Krama
+              </h3>
+              <p className="text-gray-600 text-sm">
+                Lakukan pembayaran iuran bulanan krama desa secara mandiri melalui layanan digital kami.
+              </p>
+            </div>
+
+            {/* Placeholder Tombol Bayar */}
+            <Link
+              href="/pembayaran" 
+              className="bg-green-600 hover:bg-green-700 text-white px-8 py-2 rounded-full font-bold text-sm transition flex items-center gap-2 shadow-lg"
+            >
+              Bayar Sekarang
+            </Link>
+          </div>
+
+          {/* GRID LAYANAN SURAT-MENYURAT */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {layananList.map((item, index) => (
               <div

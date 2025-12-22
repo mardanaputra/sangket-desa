@@ -3,68 +3,50 @@
 import Image from "next/image";
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-// Navbar sekarang menerima prop 'scrolled'
 export default function Navbar({ scrolled }) {
-// ... KODE NAVBAR ANDA YANG SAMA PERSIS ...
-// Logic penentuan kelas sudah benar:
-// const navBackground = scrolled 
-//   ? "bg-white shadow-md border-b border-gray-100" 
-//   : "bg-transparent"; 
-// ...
-// Penentuan warna teks juga sudah benar.
-
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
 
-  // Penentuan kelas dinamis untuk background dan shadow
   const baseClasses = "fixed top-0 w-full z-50 transition-all duration-300";
   const navBackground = scrolled 
-    ? "bg-white shadow-md border-b border-gray-100" // Opaque putih saat di-scroll
-    : "bg-transparent"; // Transparan saat di atas
+    ? "bg-white shadow-md border-b border-gray-100" 
+    : "bg-transparent";
 
-  // Penentuan warna teks dinamis
   const defaultTextColor = scrolled ? "text-gray-800" : "text-white";
   const accentTextColor = scrolled ? "text-green-600" : "text-green-300";
   const mobileToggleColor = scrolled ? "text-gray-800" : "text-green-300";
-
-  // Penentuan shadow dinamis (Drop shadow hanya saat transparan)
   const shadowClass = scrolled ? "" : "drop-shadow-lg";
-
 
   return (
     <nav className={`${baseClasses} ${navBackground}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
         <div className="flex justify-between h-20 items-center">
           
-         {/* LOGO DESA */}
-<div className="flex-shrink-0 flex items-center gap-2">
-  <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white font-bold shadow-lg">
-    {/* Image component */}
-    <Image src="/logo-sangket.png" width={90} height={90} alt="Logo" />
-  </div>
-  
-  {/* Judul: Lebih Besar (text-2xl) & Tambahkan Spasi di antara kata */}
-  <Link 
-    href="/" 
-    // Mengubah ukuran teks dari text-xl menjadi text-2xl
-    className={`text-2xl font-extrabold tracking-tight ${shadowClass}`} 
-  > 
-    {/* Pastikan ada spasi di antara dua span */}
-    <span className={defaultTextColor}>Desa</span>{' '} 
-    <span className={accentTextColor}>Sangket</span>
-  </Link>
-</div>
+          {/* LOGO DESA */}
+          <div className="flex-shrink-0 flex items-center gap-2">
+            <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white font-bold shadow-lg overflow-hidden">
+              <Image src="/logo-sangket.png" width={90} height={90} alt="Logo" />
+            </div>
+            
+            <Link 
+              href="/" 
+              className={`text-2xl font-extrabold tracking-tight ${shadowClass}`} 
+            > 
+              <span className={defaultTextColor}>Desa</span>{' '} 
+              <span className={accentTextColor}>Sangket</span>
+            </Link>
+          </div>
 
           {/* KONTEN KANAN */}
           <div className="flex items-center gap-12 flex-grow justify-end"> 
-            
             {/* MENU DESKTOP */}
-            <div className="hidden md:flex space-x-12"> 
-              <NavLink href="/" label="Beranda" scrolled={scrolled} />
-              <NavLink href="/profil" label="Profil Desa" scrolled={scrolled} />
-              <NavLink href="/berita" label="Kabar Desa" scrolled={scrolled} />
-              <NavLink href="/layanan" label="Layanan Surat" scrolled={scrolled} />
+            <div className="hidden md:flex space-x-8"> 
+              <NavLink href="/" label="Beranda" scrolled={scrolled} active={pathname === "/"} />
+              <NavLink href="/profil" label="Profil Desa" scrolled={scrolled} active={pathname === "/profil"} />
+              <NavLink href="/berita" label="Kabar Desa" scrolled={scrolled} active={pathname === "/berita"} />
+              <NavLink href="/layanan" label="Layanan Online" scrolled={scrolled} active={pathname === "/layanan"} />
             </div>
 
             {/* TOMBOL LOGIN */}
@@ -93,14 +75,14 @@ export default function Navbar({ scrolled }) {
         </div>
       </div>
 
-      {/* MENU MOBILE (Tetap putih agar terbaca) */}
+      {/* MENU MOBILE */}
       {isOpen && (
         <div className="md:hidden bg-white border-b border-gray-100 shadow-xl">
           <div className="px-2 pt-3 pb-4 space-y-1 sm:px-3 flex flex-col"> 
-            <MobileNavLink href="/" label="Beranda" />
-            <MobileNavLink href="/profil" label="Profil Desa" />
-            <MobileNavLink href="/berita" label="Kabar Desa" />
-            <MobileNavLink href="/layanan" label="Layanan Surat" />
+            <MobileNavLink href="/" label="Beranda" active={pathname === "/"} />
+            <MobileNavLink href="/profil" label="Profil Desa" active={pathname === "/profil"} />
+            <MobileNavLink href="/berita" label="Kabar Desa" active={pathname === "/berita"} />
+            <MobileNavLink href="/layanan" label="Layanan Surat" active={pathname === "/layanan"} />
           </div>
         </div>
       )}
@@ -108,27 +90,41 @@ export default function Navbar({ scrolled }) {
   );
 }
 
-// NavLink Component - Dynamic Styles
-function NavLink({ href, label, scrolled }) { 
-    const textColor = scrolled ? "text-gray-700" : "text-white"; // Jika scroll, teks gelap
+function NavLink({ href, label, scrolled, active }) { 
+    // Menentukan warna teks saat aktif:
+    // Jika scrolled: Teks hijau pekat (green-600)
+    // Jika transparan: Teks hijau terang (green-400) agar menyala di atas background gelap
+    const activeColor = scrolled ? "text-green-600" : "text-green-400";
+    const inactiveColor = scrolled ? "text-gray-700" : "text-white";
+    
+    const textColor = active ? activeColor : inactiveColor;
     const hoverColor = scrolled ? "hover:text-green-600" : "hover:text-green-300";
     const shadowClass = scrolled ? "" : "drop-shadow-lg"; 
-    const hoverShadow = scrolled ? "" : "hover:drop-shadow-xl";
 
     return (
       <Link 
         href={href} 
-        className={`${textColor} font-medium transition duration-200 ${shadowClass} ${hoverColor} ${hoverShadow}`}
+        className={`relative pb-2 font-medium transition duration-200 ${textColor} ${hoverColor} ${shadowClass} group`}
       >
         {label}
+        {/* Element Garis Bawah - Menggunakan bg-current agar warnanya sama dengan teks */}
+        <span 
+          className={`absolute left-0 -bottom-1 h-[3px] bg-current transition-all duration-300 
+          ${active ? 'w-full' : 'w-0 group-hover:w-full'}`}
+        ></span>
       </Link>
     );
 }
 
-// MobileNavLink Component (Tidak Berubah)
-function MobileNavLink({ href, label }) {
+function MobileNavLink({ href, label, active }) {
   return (
-    <Link href={href} className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-green-600 hover:bg-green-50">
+    <Link 
+      href={href} 
+      className={`block px-3 py-2 rounded-md text-base font-medium transition
+      ${active 
+        ? "text-green-600 bg-green-50 border-l-4 border-green-600" 
+        : "text-gray-700 hover:text-green-600 hover:bg-green-50"}`}
+    >
       {label}
     </Link>
   );
