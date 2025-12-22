@@ -5,26 +5,23 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import useNewsStore from "@/store/useNewsStore";
-import useDebounce from "@/hooks/useDebounce"; // 1. Import hook debounce
+import useDebounce from "@/hooks/useDebounce";
 
 export default function Berita() {
   const [scrolled, setScrolled] = useState(false);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
 
-  // 2. Gunakan debounce untuk input pencarian (tunggu 500ms)
   const debouncedSearch = useDebounce(search, 500);
 
-  const { news, categories, loading, error, fetchNews, fetchCategories } = useNewsStore();
+  const { news, categories, loading, fetchNews, fetchCategories } = useNewsStore();
 
   /* ================= EFFECTS ================= */
   
-  // Ambil kategori hanya sekali saat mount
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
 
-  // 3. Trigger fetchNews hanya ketika debouncedSearch atau category berubah
   useEffect(() => {
     fetchNews({ search: debouncedSearch, category });
   }, [debouncedSearch, category, fetchNews]);
@@ -35,23 +32,15 @@ export default function Berita() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  /* ================= RENDER PENANGANAN STATUS ================= */
-  // (Bagian loading dan error tetap sama seperti sebelumnya)
-  if (loading) return (
-    <>
-      <Navbar scrolled={scrolled} />
-      <main className="bg-gray-100 min-h-screen pt-40 text-center">
-        <p className="text-xl text-green-700 font-semibold animate-pulse">Mencari berita...</p>
-      </main>
-    </>
-  );
-
+  /* ================= RENDER ================= */
   return (
     <>
       <Navbar scrolled={scrolled} />
 
       <main className="bg-gray-100 min-h-screen pb-24">
-        {/* HERO & FILTER SECTION */}
+        {/* HERO & FILTER SECTION: 
+            Dibiarkan tetap render (tidak di-unmount) agar fokus input pencarian tidak hilang saat loading 
+        */}
         <section className="relative pt-28 pb-24 px-6 text-center text-white">
           <Image src="/hero-buleleng-3.jpg" alt="Desa Sangket" fill priority className="object-cover" />
           <div className="absolute inset-0 bg-green-900/50" />
@@ -87,11 +76,15 @@ export default function Berita() {
           </div>
         </section>
 
-        {/* LIST BERITA */}
+        {/* LIST BERITA: Indikator loading hanya diletakkan di sini */}
         <section className="max-w-7xl mx-auto px-6 -mt-16 relative z-20">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* 4. Gunakan 'news' langsung dari store, tidak perlu .filter() manual lagi */}
-            {news && news.length > 0 ? (
+            {loading ? (
+              // Loading lokal agar halaman utama (termasuk input search) tidak hilang
+              <div className="md:col-span-3 text-center py-20 bg-white/80 rounded-xl shadow-sm">
+                 <p className="text-green-700 font-semibold animate-pulse">Memperbarui daftar berita...</p>
+              </div>
+            ) : news && news.length > 0 ? (
               news.map((item) => (
                 <NewsCard key={item.id} data={item} />
               ))
@@ -111,13 +104,11 @@ export default function Berita() {
 function NewsCard({ data }) {
   const getImageUrl = useNewsStore((state) => state.getImageUrl);
 
-  // 1. Fungsi untuk menghapus tag HTML (seperti <p>, <strong>) agar deskripsi bersih
   const stripHtml = (html) => {
     if (!html) return "";
     return html.replace(/<[^>]*>?/gm, ''); 
   };
 
-  // 2. Fungsi untuk merapikan format tanggal (Contoh: 27 Maret 2025)
   const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -130,24 +121,21 @@ function NewsCard({ data }) {
 
   return (
     <article className="bg-white rounded-md overflow-hidden shadow-sm border border-gray-200 hover:shadow-lg transition flex flex-col h-full">
-      {/* BAGIAN GAMBAR */}
       <div className="relative h-52 w-full bg-gray-200">
         <Image 
           src={getImageUrl(data.image)}
           alt={data.title || "Gambar Berita"} 
           fill 
-          unoptimized={true} // Tetap gunakan ini untuk bypass error 400 pada localhost
+          unoptimized={true} 
           className="object-cover"
         />
       </div>
 
-      {/* BAGIAN KONTEN */}
       <div className="p-6 flex flex-col flex-grow">
         <div className="flex items-center gap-3 mb-3 text-xs font-semibold">
           <span className="bg-green-100 text-green-700 px-2 py-1 rounded-sm">
             {data.category}
           </span>
-          {/* TANGGAL: Sudah diformat menjadi bahasa Indonesia */}
           <span className="text-gray-400">{formatDate(data.date || data.created_at)}</span>
         </div>
 
@@ -155,7 +143,6 @@ function NewsCard({ data }) {
           <Link href={`/berita/${data.id}`}>{data.title}</Link>
         </h3>
 
-        {/* DESKRIPSI: Sudah bersih dari tag HTML dan dipotong agar rapi */}
         <p className="text-gray-600 text-sm line-clamp-3 mb-5 flex-grow text-justify">
           {data.desc || stripHtml(data.content)?.substring(0, 120)}...
         </p>

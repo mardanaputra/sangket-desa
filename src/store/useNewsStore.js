@@ -14,31 +14,43 @@ const useNewsStore = create((set) => ({
   /* ================= ACTIONS ================= */
 
   /**
-   * Mengambil URL gambar melalui rute khusus API Laravel.
-   * Ditambahkan encodeURIComponent untuk menangani karakter spasi/khusus 
-   * agar tidak menyebabkan 400 Bad Request.
+   * Fungsi Helper untuk memproses URL gambar.
+   * Membersihkan path agar kompatibel dengan Route API Laravel.
    */
   getImageUrl: (path) => {
-  if (!path) return "/hero-buleleng.jpg"; 
-  if (path.toString().startsWith('http')) return path; 
+    // 1. Jika path kosong, gunakan gambar default
+    if (!path) return "/hero-buleleng.jpg"; 
+    
+    // 2. Jika path sudah berupa URL lengkap, langsung kembalikan
+    if (path.toString().startsWith('http')) return path; 
+    
+    /**
+     * 3. Pembersihan Path:
+     * - Mengubah backslash (\) menjadi forward slash (/)
+     * - Menghapus awalan 'public/' jika tersimpan di database
+     */
+    const cleanPath = path.toString()
+      .replace(/\\/g, '/')
+      .replace(/^public\//, "");
 
-  // Pastikan menggunakan forward slash (/) bukan backslash (\)
-  const cleanPath = path.toString().replace(/\\/g, '/').replace(/^public\//, "");
-
-  // HAPUS encodeURIComponent di sini agar tidak double encoding
-  return `${API_BASE_URL}/image/${cleanPath}`;
-},
+    /**
+     * 4. Mengarahkan ke endpoint khusus Laravel:
+     * Browser akan menangani encoding spasi secara otomatis.
+     */
+    return `${API_BASE_URL}/image/${cleanPath}`;
+  },
 
   /**
-   * Mengambil semua berita dengan dukungan filter pencarian dan kategori.
+   * Ambil daftar berita dengan filter pencarian & kategori.
    */
   fetchNews: async (params = {}) => {
     set({ loading: true, error: null });
     try {
       const { search = "", category = "" } = params;
-      const response = await fetch(
-        `${API_BASE_URL}/articles?search=${search}&category=${category}`
-      );
+      
+      // Menggunakan URLSearchParams agar query string lebih aman
+      const query = new URLSearchParams({ search, category }).toString();
+      const response = await fetch(`${API_BASE_URL}/articles?${query}`);
       
       if (!response.ok) throw new Error("Gagal mengambil daftar berita");
       
@@ -52,7 +64,7 @@ const useNewsStore = create((set) => ({
   },
 
   /**
-   * Mengambil detail satu berita berdasarkan ID.
+   * Ambil detail berita berdasarkan ID.
    */
   fetchNewsById: async (id) => {
     set({ loading: true, error: null, singleNews: null });
@@ -68,7 +80,7 @@ const useNewsStore = create((set) => ({
   },
 
   /**
-   * Mengambil daftar kategori dinamis dari database Laravel.
+   * Ambil daftar kategori dinamis dari Laravel.
    */
   fetchCategories: async () => {
     try {
@@ -76,7 +88,6 @@ const useNewsStore = create((set) => ({
       if (!response.ok) throw new Error("Gagal mengambil kategori");
       
       const data = await response.json();
-      // Menyimpan daftar kategori (id, name) ke state
       set({ categories: data });
     } catch (err) {
       console.error("Error Kategori:", err.message);
@@ -84,7 +95,7 @@ const useNewsStore = create((set) => ({
   },
 
   /**
-   * Membersihkan data berita detail saat meninggalkan halaman.
+   * Membersihkan data detail saat pindah halaman.
    */
   clearSingleNews: () => set({ singleNews: null, error: null })
 }));

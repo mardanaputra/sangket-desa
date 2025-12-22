@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar"; 
+import useNewsStore from "@/store/useNewsStore"; // 1. Import Store
 
 const heroImages = [
   { path: '/hero-buleleng.jpg', alt: 'Pemandangan Desa Sangket 1' },
@@ -14,13 +15,24 @@ const heroImages = [
 
 export default function Home() {
   const [isScrolled, setIsScrolled] = useState(false);
+  
+  // 2. Ambil state dan aksi dari useNewsStore
+  const { news, fetchNews, loading } = useNewsStore();
 
   useEffect(() => {
+    // 3. Ambil data berita saat halaman dimuat
+    fetchNews();
+
     const handleScroll = () => setIsScrolled(window.scrollY > 100);
     window.addEventListener("scroll", handleScroll);
     handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [fetchNews]);
+
+  // 4. Logika untuk mengambil 3 berita TERBARU
+  const latestNews = [...news]
+    .sort((a, b) => new Date(b.created_at || b.date) - new Date(a.created_at || a.date))
+    .slice(0, 3);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [nextIndex, setNextIndex] = useState(1);
@@ -77,35 +89,18 @@ export default function Home() {
 
             <div className="flex flex-wrap gap-4">
               <Link href="/profil">
-                <span className="inline-block px-8 py-3 bg-white border text-gray-700 rounded-lg font-medium hover:bg-green-600 hover:text-white shadow-lg cursor-pointer">
+                <span className="inline-block px-8 py-3 bg-white border text-gray-700 rounded-lg font-medium hover:bg-green-600 hover:text-white shadow-lg cursor-pointer transition">
                   Profil Desa
                 </span>
               </Link>
 
               <Link href="/layanan">
-                <span className="inline-block px-8 py-3 bg-white border text-gray-700 rounded-lg font-medium hover:bg-green-600 hover:text-white shadow-lg cursor-pointer">
+                <span className="inline-block px-8 py-3 bg-white border text-gray-700 rounded-lg font-medium hover:bg-green-600 hover:text-white shadow-lg cursor-pointer transition">
                   Layanan Online
                 </span>
               </Link>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* ================= SECTION BARU (KOSONG) ================= */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6 text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">
-            SECTION KOSONG
-          </h2>
-          <p className="text-gray-500 max-w-2xl mx-auto">
-            Bagian ini sengaja dikosongkan dan dapat diisi sesuai kebutuhan tim.
-            Contoh penggunaan: sambutan kepala desa, pengumuman penting,
-            banner program desa, atau konten informasi lainnya.
-          </p>
-          <p className="text-sm text-gray-400 mt-4 italic">
-            (Silakan modifikasi section ini sesuai kebutuhan)
-          </p>
         </div>
       </section>
 
@@ -121,7 +116,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ================= BERITA ================= */}
+      {/* ================= BERITA (DINAMIS) ================= */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex justify-between items-end mb-12">
@@ -136,9 +131,18 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            <NewsCard category="Pemerintahan" date="08 Des 2025" title="Musyawarah Perencanaan Pembangunan Desa Tahun 2025" desc="Pemerintah desa mengundang seluruh elemen masyarakat..." imageSrc="/desa-sangket.jpg" />
-            <NewsCard category="Kesehatan" date="06 Des 2025" title="Jadwal Posyandu Balita & Lansia Bulan Ini" desc="Berikut jadwal lengkap kegiatan Posyandu..." imageSrc="/desa-sangket.jpg" />
-            <NewsCard category="Ekonomi" date="01 Des 2025" title="Pelatihan Digital Marketing UMKM Desa" desc="Meningkatkan daya saing produk lokal..." imageSrc="/desa-sangket.jpg" />
+            {loading ? (
+              // Skeleton atau Loading sederhana
+              [...Array(3)].map((_, i) => (
+                <div key={i} className="h-80 bg-gray-100 animate-pulse rounded-2xl" />
+              ))
+            ) : latestNews.length > 0 ? (
+              latestNews.map((item) => (
+                <NewsCard key={item.id} data={item} />
+              ))
+            ) : (
+              <p className="col-span-3 text-center text-gray-400">Belum ada berita terbaru.</p>
+            )}
           </div>
         </div>
       </section>
@@ -157,19 +161,47 @@ function StatCard({ number, label }) {
   );
 }
 
-function NewsCard({ category, date, title, desc, imageSrc }) {
+function NewsCard({ data }) {
+  const getImageUrl = useNewsStore((state) => state.getImageUrl);
+
+  // Helper membersihkan HTML dan format tanggal
+  const stripHtml = (html) => html ? html.replace(/<[^>]*>?/gm, '') : "";
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    return new Intl.DateTimeFormat('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    }).format(new Date(dateString));
+  };
+
   return (
-    <div className="border rounded-2xl overflow-hidden hover:shadow-xl transition bg-white">
+    <div className="border rounded-2xl overflow-hidden hover:shadow-xl transition bg-white flex flex-col h-full">
       <div className="h-48 relative">
-        <Image src={imageSrc} alt={title} fill className="object-cover" />
+        <Image 
+          src={getImageUrl(data.image)} 
+          alt={data.title} 
+          fill 
+          unoptimized={true} 
+          className="object-cover" 
+        />
       </div>
-      <div className="p-6">
+      <div className="p-6 flex flex-col flex-grow">
         <div className="flex gap-4 text-xs text-gray-500 mb-3">
-          <span className="text-green-600 font-semibold bg-green-50 px-2 py-1 rounded">{category}</span>
-          <span>{date}</span>
+          <span className="text-green-600 font-semibold bg-green-50 px-2 py-1 rounded">
+            {data.category}
+          </span>
+          <span>{formatDate(data.date || data.created_at)}</span>
         </div>
-        <h3 className="text-xl font-bold mb-3">{title}</h3>
-        <p className="text-gray-500 text-sm line-clamp-3">{desc}</p>
+        <h3 className="text-xl font-bold mb-3 line-clamp-2 hover:text-green-600 transition">
+          <Link href={`/berita/${data.id}`}>{data.title}</Link>
+        </h3>
+        <p className="text-gray-500 text-sm line-clamp-3 mb-4">
+          {data.desc || stripHtml(data.content)}
+        </p>
+        <Link href={`/berita/${data.id}`} className="mt-auto text-green-600 text-sm font-semibold hover:underline">
+          Baca Selengkapnya →
+        </Link>
       </div>
     </div>
   );
