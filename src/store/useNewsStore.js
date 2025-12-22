@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { supabase } from '@/utils/supabase/client'; // Pastikan path helper benar
+import { supabase } from '@/utils/supabase/client';
 
 const useNewsStore = create((set, get) => ({
   /* ================= STATE ================= */
@@ -13,28 +13,35 @@ const useNewsStore = create((set, get) => ({
 
   /**
    * Mengambil URL gambar dari Supabase Storage.
+   * PENTING: Pastikan nama Bucket di Supabase Storage Anda sesuai.
+   * Jika path di database tersimpan sebagai 'article/nama_file.jpg',
+   * kemungkinan bucket Anda bernama 'articles' atau 'public'.
    */
   getImageUrl: (path) => {
-    if (!path) return "/hero-buleleng.jpg";
+    // 1. Jika tidak ada path, kembalikan placeholder default
+    if (!path) return "/hero-buleleng-3.jpg"; // Pastikan file ini ada di folder public project Anda
+
+    // 2. Jika path sudah berupa URL lengkap (misal dari Google Drive atau web lain), kembalikan langsung
     if (path.toString().startsWith('http')) return path;
 
-    // Ganti 'news_images' dengan nama BUCKET di Supabase Storage Anda
+    // 3. Ambil dari Supabase Storage
+    // GANTI 'articles' dengan nama bucket asli Anda di dashboard Supabase (misal: 'news_images' atau 'images')
     const { data } = supabase.storage
-      .from('news_images')
+      .from('articles')
       .getPublicUrl(path);
 
     return data.publicUrl;
   },
 
   /**
-   * Ambil daftar berita dari tabel 'posts' di Supabase.
+   * Ambil daftar berita dari tabel 'articles' di Supabase.
    */
   fetchNews: async () => {
     set({ loading: true, error: null });
     try {
-      // Ambil data posts dan join dengan tabel categories
+      // PERBAIKAN: Mengambil dari tabel 'articles', bukan 'posts'
       const { data, error } = await supabase
-        .from('posts')
+        .from('articles')
         .select(`
           *,
           categories (
@@ -48,6 +55,7 @@ const useNewsStore = create((set, get) => ({
 
       set({ news: data, loading: false });
     } catch (err) {
+      console.error("Gagal mengambil berita:", err.message);
       set({ error: err.message, loading: false });
     }
   },
@@ -58,11 +66,13 @@ const useNewsStore = create((set, get) => ({
   fetchNewsById: async (id) => {
     set({ loading: true, error: null, singleNews: null });
     try {
+      // PERBAIKAN: Mengambil dari tabel 'articles', bukan 'posts'
       const { data, error } = await supabase
-        .from('posts')
+        .from('articles')
         .select(`
           *,
           categories (
+            id,
             name
           )
         `)
@@ -73,6 +83,7 @@ const useNewsStore = create((set, get) => ({
 
       set({ singleNews: data, loading: false });
     } catch (err) {
+      console.error("Gagal mengambil detail berita:", err.message);
       set({ error: err.message, loading: false });
     }
   },
