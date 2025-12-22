@@ -17,6 +17,8 @@ const heroImages = [
   { path: '/hero-buleleng-3.jpg', alt: 'Pemandangan Desa Sangket 4' },
 ];
 
+
+
 export default function Home() {
   /* ================= STATE & STORE ================= */
   const [isScrolled, setIsScrolled] = useState(false);

@@ -22,7 +22,6 @@ export default function Footer() {
             <li><Link href="/profil" className="text-gray-600 hover:text-green-600 transition">Profil Desa</Link></li>
             <li><Link href="/berita" className="text-gray-600 hover:text-green-600 transition">Kabar Terbaru</Link></li>
             <li><Link href="/layanan" className="text-gray-600 hover:text-green-600 transition">Layanan Surat</Link></li>
-            <li><Link href="/transparansi" className="text-gray-600 hover:text-green-600 transition">Transparansi Dana</Link></li>
           </ul>
         </div>
 
