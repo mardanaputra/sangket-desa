@@ -27,20 +27,15 @@ export default function Berita() {
     [categories]
   );
 
-  const safeNews = useMemo(
-    () => (Array.isArray(news) ? news : []),
-    [news]
-  );
-
-  // ambil category dari query param (?category=ID) kalau ada
+  // ambil category dari query param (?category=ID)
   useEffect(() => {
     const catFromUrl = searchParams.get("category");
     if (catFromUrl) setCategory(String(catFromUrl));
   }, [searchParams]);
 
   useEffect(() => {
-    fetchCategories?.();
-    fetchNews?.();
+    fetchCategories();
+    fetchNews();
   }, [fetchCategories, fetchNews]);
 
   useEffect(() => {
@@ -49,6 +44,7 @@ export default function Berita() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  /* ================= FILTER ================= */
   const filteredNews = useMemo(() => {
     if (!Array.isArray(news)) return [];
 
@@ -57,16 +53,13 @@ export default function Berita() {
         .toLowerCase()
         .includes(debouncedSearch.toLowerCase());
 
-      // ✅ pakai relasi categories.id
-      const itemCategoryId = item.categories?.id;
-
       const matchesCategory =
-        category === "" || String(itemCategoryId) === String(category);
+        category === "" ||
+        String(item.categories?.id) === String(category);
 
       return matchesSearch && matchesCategory;
     });
   }, [news, debouncedSearch, category]);
-
 
   useEffect(() => {
     setCurrentPage(1);
@@ -86,22 +79,12 @@ export default function Berita() {
     <>
       <Navbar scrolled={scrolled} />
       <main className="bg-gray-100 min-h-screen pb-24">
+        {/* HERO */}
         <section className="relative pt-28 pb-24 px-6 text-center text-white overflow-hidden">
-          <Image
-            src="/hero-buleleng-3.jpg"
-            alt="Desa Sangket"
-            fill
-            priority
-            className="object-cover"
-          />
+          <Image src="/hero-buleleng-3.jpg" alt="Desa Sangket" fill priority className="object-cover" />
           <div className="absolute inset-0 bg-green-900/50" />
           <div className="relative z-10 max-w-4xl mx-auto">
-            <motion.h1
-              initial="hidden"
-              animate="visible"
-              variants={fadeInUp}
-              className="text-4xl md:text-5xl font-bold mb-4"
-            >
+            <motion.h1 initial="hidden" animate="visible" variants={fadeInUp} className="text-4xl md:text-5xl font-bold mb-4">
               Kabar Desa
             </motion.h1>
 
@@ -110,10 +93,9 @@ export default function Berita() {
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="md:col-span-1 px-4 py-3 rounded-md border border-gray-300 text-gray-700 outline-none focus:ring-2 focus:ring-green-600 transition-all cursor-pointer"
+                  className="md:col-span-1 px-4 py-3 rounded-md border border-gray-300 text-gray-700 outline-none focus:ring-2 focus:ring-green-600"
                 >
                   <option value="">Semua Kategori</option>
-
                   {safeCategories.map((cat) => (
                     <option key={cat.id} value={String(cat.id)}>
                       {cat.name}
@@ -121,102 +103,33 @@ export default function Berita() {
                   ))}
                 </select>
 
-                <div className="relative md:col-span-3">
-                  <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Cari berita desa..."
-                    className="w-full px-4 py-3 rounded-md border border-gray-300 text-gray-800 outline-none focus:ring-2 focus:ring-green-600 transition-all"
-                  />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2">🔍</span>
-                </div>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Cari berita desa..."
+                  className="md:col-span-3 px-4 py-3 rounded-md border border-gray-300"
+                />
               </div>
             </div>
           </div>
         </section>
 
+        {/* LIST */}
         <section className="max-w-7xl mx-auto px-6 -mt-16 relative z-20">
           <AnimatePresence mode="wait">
             {loading ? (
-              <motion.div
-                key="loading"
-                className="text-center py-20 bg-white/80 rounded-xl shadow-sm"
-              >
-                <p className="text-green-700 font-semibold animate-pulse">
-                  Memperbarui daftar berita...
-                </p>
-              </motion.div>
+              <div className="text-center py-20 bg-white rounded-xl">Loading...</div>
             ) : currentNews.length > 0 ? (
-              <>
-                <motion.div
-                  key="list"
-                  initial="hidden"
-                  animate="visible"
-                  className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
-                >
-                  {currentNews.map((item) => (
-                    <NewsCard key={item.id} data={item} />
-                  ))}
-                </motion.div>
-
-                {totalPages > 1 && (
-                  <div className="flex justify-center items-center mt-16 gap-3">
-                    <button
-                      onClick={() => {
-                        setCurrentPage((prev) => Math.max(prev - 1, 1));
-                        window.scrollTo({ top: 400, behavior: "smooth" });
-                      }}
-                      disabled={currentPage === 1}
-                      className={`px-4 py-2 rounded-lg font-medium transition-all border ${currentPage === 1
-                        ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                        : "bg-white text-green-700 border-gray-200 hover:border-green-600 active:scale-95"
-                        }`}
-                    >
-                      ← Sebelumnya
-                    </button>
-
-                    <div className="flex gap-2">
-                      {Array.from({ length: totalPages }, (_, i) => (
-                        <button
-                          key={i + 1}
-                          onClick={() => {
-                            setCurrentPage(i + 1);
-                            window.scrollTo({ top: 400, behavior: "smooth" });
-                          }}
-                          className={`w-10 h-10 rounded-lg font-bold transition-all border ${currentPage === i + 1
-                            ? "bg-green-700 text-white border-green-700 shadow-md scale-105"
-                            : "bg-white text-gray-600 border-gray-200 hover:border-green-600"
-                            }`}
-                        >
-                          {i + 1}
-                        </button>
-                      ))}
-                    </div>
-
-                    <button
-                      onClick={() => {
-                        setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-                        window.scrollTo({ top: 400, behavior: "smooth" });
-                      }}
-                      disabled={currentPage === totalPages}
-                      className={`px-4 py-2 rounded-lg font-medium transition-all border ${currentPage === totalPages
-                        ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                        : "bg-white text-green-700 border-gray-200 hover:border-green-600 active:scale-95"
-                        }`}
-                    >
-                      Berikutnya →
-                    </button>
-                  </div>
-                )}
-              </>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {currentNews.map((item) => (
+                  <NewsCard key={item.id} data={item} />
+                ))}
+              </div>
             ) : (
-              <motion.div
-                key="empty"
-                className="text-center py-16 bg-white rounded-xl shadow-md"
-              >
+              <div className="text-center py-16 bg-white rounded-xl">
                 <p className="text-gray-500">Berita tidak ditemukan.</p>
-              </motion.div>
+              </div>
             )}
           </AnimatePresence>
         </section>
@@ -233,40 +146,15 @@ function NewsCard({ data }) {
     <motion.article
       layout
       whileHover={{ y: -10 }}
-      className="bg-white rounded-md overflow-hidden shadow-sm border border-gray-200 hover:shadow-2xl transition-all flex flex-col h-full group"
+      className="bg-white rounded-md overflow-hidden shadow-sm border border-gray-200 hover:shadow-2xl transition-all flex flex-col h-full"
     >
       <Link href={`/berita/${data.id}`} className="flex flex-col h-full">
-        <div className="relative h-52 w-full bg-gray-200 overflow-hidden">
-          <Image
-            src={getImageUrl(data.image)}
-            alt={data.title || "Berita"}
-            fill
-            unoptimized
-            className="object-cover group-hover:scale-110 transition-transform duration-700"
-          />
+        <div className="relative h-52 w-full">
+          <Image src={getImageUrl(data.image)} alt={data.title} fill unoptimized className="object-cover" />
         </div>
-
         <div className="p-6 flex flex-col flex-grow">
-          <div className="flex items-center gap-3 mb-3 text-xs font-semibold">
-            <span className="bg-green-100 text-green-700 px-2 py-1 rounded-sm uppercase tracking-wider">
-              {categoryDisplay}
-            </span>
-          </div>
-
-          <h3 className="text-lg font-bold text-gray-800 mb-3 leading-snug group-hover:text-green-700 transition-colors line-clamp-2">
-            {data.title}
-          </h3>
-
-          <p className="text-gray-600 text-sm line-clamp-3 mb-5 flex-grow text-justify">
-            {data.desc ||
-              (data.content
-                ? data.content.replace(/<[^>]*>?/gm, "").substring(0, 120)
-                : "Tidak ada deskripsi...")}
-          </p>
-
-          <span className="text-green-700 font-semibold text-sm group-hover:underline mt-auto">
-            Baca Selengkapnya →
-          </span>
+          <span className="text-xs font-semibold text-green-700 mb-2">{categoryDisplay}</span>
+          <h3 className="font-bold text-gray-800 mb-2 line-clamp-2">{data.title}</h3>
         </div>
       </Link>
     </motion.article>

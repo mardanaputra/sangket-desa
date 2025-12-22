@@ -1,10 +1,10 @@
-import { supabase } from "@/utils/supabase/client";
+import { supabaseServer } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseServer
     .from("categories")
-    .select("id, name")      // 🔥 ambil id + name saja
+    .select("id, name")
     .order("name", { ascending: true });
 
   if (error) {
@@ -14,6 +14,5 @@ export async function GET() {
     );
   }
 
-  // ✅ kirim ARRAY langsung
   return NextResponse.json(data);
 }

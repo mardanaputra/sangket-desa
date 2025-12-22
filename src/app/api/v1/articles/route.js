@@ -1,15 +1,11 @@
-import { supabase } from "@/utils/supabase/client"
-import { NextResponse } from "next/server"
+import { supabaseServer } from "@/utils/supabase/server";
+import { NextResponse } from "next/server";
 
-// Agar data selalu fresh
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
-// 1. GET: Ambil semua artikel
 export async function GET() {
-  // Perhatikan: Saya ubah 'image_url' jadi 'image' sesuai screenshot
-  // Pastikan nama relasi 'categories' benar. Jika error, cek nama foreign key di Supabase.
-  const { data, error } = await supabase
-    .from('articles')
+  const { data, error } = await supabaseServer
+    .from("articles")
     .select(`
       id,
       title,
@@ -21,10 +17,9 @@ export async function GET() {
         name
       )
     `)
-    .order('created_at', { ascending: false });
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Supabase Error:", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 

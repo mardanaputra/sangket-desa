@@ -36,19 +36,19 @@ const useNewsStore = create((set) => ({
   },
 
   fetchNewsById: async (id) => {
-    set({ loading: true, error: null, singleNews: null });
     try {
-      const res = await fetch(`/api/v1/articles/${id}`, { cache: "no-store" });
-      if (!res.ok) throw new Error(`Gagal mengambil detail: ${res.statusText}`);
-      const json = await res.json();
+      const safeId = Array.isArray(id) ? id[0] : id;
+      const res = await fetch(`/api/v1/articles/${encodeURIComponent(String(safeId))}`);
 
-      // support {data: {...}} atau langsung object
-      const obj = json?.data ?? json;
-      set({ singleNews: obj || null, loading: false });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      set({ singleNews: data, loading: false, error: null });
     } catch (err) {
-      set({ singleNews: null, error: err?.message || "Gagal mengambil detail", loading: false });
+      set({ singleNews: null, loading: false, error: String(err) });
     }
   },
+
+
 
   fetchCategories: async () => {
     try {
