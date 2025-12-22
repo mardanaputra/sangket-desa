@@ -270,7 +270,7 @@ export default function Profil() {
               <div className="w-full h-[400px] rounded-2xl overflow-hidden shadow-inner border-2 border-gray-50">
                 <iframe
                   title="Peta Desa Sangket"
-                  src="https://www.google.com/maps/search/desa+sangket/@-8.1513891,115.0978328,15.63z/data=!4m2!2m1!6e1?entry=ttu&g_ep=EgoyMDI1MTIwOS4wIKXMDSoASAFQAw%3D%3D"
+                  src="https://www.google.com/maps?q=Desa%20Sangket%20Buleleng%20Bali&output=embed"
                   width="100%"
                   height="100%"
                   loading="lazy"

@@ -1,25 +1,45 @@
-
+// src/app/layout.js
 import Footer from "@/components/Footer";
 import "./globals.css";
-import Navbar from "@/components/Navbar"; // 1. Import Navbar
+import Navbar from "@/components/Navbar";
 
 export const metadata = {
-  title: "Desa Sangket",
-  description: "Website Pemerintahan Desa Sangket yang Maju dan Transparan",
+  metadataBase: new URL('https://desasangket.id'), // Ganti dengan domain asli nanti
+  title: {
+    default: "Desa Sangket - Mandiri & Transparan",
+    template: "%s | Desa Sangket"
+  },
+  description: "Website Resmi Pemerintahan Desa Sangket. Pusat informasi pelayanan publik, transparansi anggaran, dan potensi desa berbasis digital.",
+  keywords: ["Desa Sangket", "Website Desa", "Layanan Desa Online", "Buleleng", "Desa Adat"],
+  authors: [{ name: "Pemerintah Desa Sangket" }],
+  openGraph: {
+    title: "Desa Sangket",
+    description: "Website Pemerintahan Desa Sangket yang Maju dan Transparan",
+    url: 'https://desasangket.id',
+    siteName: 'Desa Sangket',
+    images: [
+      {
+        url: '/desa-sangket.jpg', // File dari public/desa-sangket.jpg
+        width: 1200,
+        height: 630,
+      },
+    ],
+    locale: 'id_ID',
+    type: 'website',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
-
-
 
 export default function RootLayout({ children }) {
   return (
     <html lang="id">
       <body>
-        <Navbar /> {/* 2. Pasang Navbar di sini */}
-        
-        {/* Konten halaman akan masuk ke sini */}
-        {children} 
-        
-        <Footer /> {/* 3. Pasang Footer di sini */}
+        <Navbar />
+        {children}
+        <Footer />
       </body>
     </html>
   );
