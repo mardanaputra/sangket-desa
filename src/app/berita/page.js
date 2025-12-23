@@ -2,20 +2,19 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, useMemo, Suspense } from "react"; // 1. Tambah Suspense
+import { useEffect, useState, useMemo, Suspense } from "react"; 
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import useNewsStore from "@/store/useNewsStore";
 import useDebounce from "@/hooks/useDebounce";
 
-// 2. Logika Utama dipindah ke "BeritaContent"
 function BeritaContent() {
   const [scrolled, setScrolled] = useState(false);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
 
-  const searchParams = useSearchParams(); // Aman digunakan di sini karena dibungkus Suspense
+  const searchParams = useSearchParams();
 
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 6;
@@ -28,7 +27,6 @@ function BeritaContent() {
     [categories]
   );
 
-  // ambil category dari query param (?category=ID)
   useEffect(() => {
     const catFromUrl = searchParams.get("category");
     if (catFromUrl) setCategory(String(catFromUrl));
@@ -103,12 +101,13 @@ function BeritaContent() {
                   ))}
                 </select>
 
+                {/* PERBAIKAN DI SINI: Ditambahkan text-gray-900 */}
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Cari berita desa..."
-                  className="md:col-span-3 px-4 py-3 rounded-md border border-gray-300"
+                  className="md:col-span-3 px-4 py-3 rounded-md border border-gray-300 text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-green-600 placeholder-gray-500"
                 />
               </div>
             </div>
@@ -138,7 +137,6 @@ function BeritaContent() {
   );
 }
 
-// 3. Export Default HANYA membungkus dengan Suspense
 export default function Berita() {
   return (
     <Suspense fallback={<div className="h-screen w-full flex items-center justify-center">Loading Halaman...</div>}>

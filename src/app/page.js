@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, animate } from "framer-motion";
 import Navbar from "../components/Navbar";
 import useNewsStore from "@/store/useNewsStore";
@@ -18,17 +18,17 @@ const heroImages = [
 ];
 
 export default function Home() {
-  /* ================= STATE & STORE ================= */
   const [isScrolled, setIsScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   const { news, fetchNews, loading, fetchCategories } = useNewsStore();
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [nextIndex, setNextIndex] = useState(1);
   const [isFading, setIsFading] = useState(false);
 
-  /* ================= EFFECTS ================= */
+  const totalImages = heroImages.length;
+  const nextIndex = (currentIndex + 1) % totalImages;
+
   useEffect(() => {
     setMounted(true);
     fetchCategories();
@@ -40,26 +40,43 @@ export default function Home() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [fetchNews, fetchCategories]);
 
-  // Logic Slider Hero
+  // Slider Hero Logic
   useEffect(() => {
-    const totalImages = heroImages.length;
     const interval = setInterval(() => {
       setIsFading(true);
-      setTimeout(() => {
+      const t = setTimeout(() => {
         setCurrentIndex((prev) => (prev + 1) % totalImages);
-        setNextIndex((prev) => (prev + 1) % totalImages);
         setIsFading(false);
       }, 1200);
+      return () => clearTimeout(t);
     }, 5000);
-
     return () => clearInterval(interval);
-  }, []);
+  }, [totalImages]);
 
-  const marqueeNews = news.length > 0 ? [...news, ...news, ...news] : [];
+  // Data diduplikasi untuk menciptakan efek loop tanpa putus
+  const marqueeNews = useMemo(
+    () => (news.length > 0 ? [...news, ...news] : []),
+    [news]
+  );
 
   return (
     <main className="bg-white overflow-hidden">
       <Navbar scrolled={isScrolled} />
+
+      {/* Inject CSS Keyframes untuk Marquee */}
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-marquee-infinite {
+          animation: marquee 40s linear infinite;
+        }
+        /* Class tambahan jika ingin pause lewat CSS murni (opsional, kita pakai JS handler di bawah) */
+        .pause-on-hover:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
 
       {/* ================= HERO ================= */}
       <section className="relative overflow-hidden h-screen min-h-[600px] flex items-center pt-20">
@@ -75,8 +92,7 @@ export default function Home() {
             src={heroImages[currentIndex].path}
             alt={heroImages[currentIndex].alt}
             fill
-            className={`object-cover absolute inset-0 transition-opacity duration-1200 ${isFading ? "opacity-0" : "opacity-100"
-              }`}
+            className={`object-cover absolute inset-0 transition-opacity duration-[1200ms] ${isFading ? "opacity-0" : "opacity-100"}`}
           />
           <div className="absolute inset-0 bg-black/50"></div>
         </div>
@@ -121,34 +137,64 @@ export default function Home() {
               Inovasi dan berita terkini dari jantung desa.
             </p>
           </div>
-          <Link href="/berita" className="group text-green-700 font-bold flex items-center gap-2 hover:underline">
-            LIHAT SEMUA <span className="text-2xl transition-transform group-hover:translate-x-2">→</span>
+
+          <Link
+            href="/berita"
+            className="group text-green-700 font-bold flex items-center gap-2 hover:underline"
+          >
+            LIHAT SEMUA{" "}
+            <span className="text-2xl transition-transform group-hover:translate-x-2">
+              →
+            </span>
           </Link>
         </div>
 
-        <div className="relative flex overflow-hidden group-marquee">
+        {/* CONTAINER MARQUEE */}
+        <div className="relative w-full overflow-hidden group-marquee">
+          {/* Gradient overlay agar transisi keluar masuk terlihat halus */}
+          <div className="absolute top-0 left-0 z-10 w-20 h-full bg-gradient-to-r from-white to-transparent pointer-events-none" />
+          <div className="absolute top-0 right-0 z-10 w-20 h-full bg-gradient-to-l from-white to-transparent pointer-events-none" />
+
           <div
-            className="marquee-track px-4"
-            style={{
-              display: 'flex',
-              gap: '2rem',
-              width: 'max-content',
-              animation: mounted ? 'marquee 50s linear infinite' : 'none',
+            className={`flex gap-8 w-max ${!loading && marqueeNews.length > 0 ? "animate-marquee-infinite" : ""}`}
+            // LOGIC PAUSE: Mengubah state animasi saat hover
+            onMouseEnter={(e) => {
+              e.currentTarget.style.animationPlayState = 'paused';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.animationPlayState = 'running';
             }}
           >
             {loading ? (
+              // SKELETON LOADING
               [...Array(6)].map((_, i) => (
-                <div key={i} className="w-[420px] h-[300px] bg-gray-100 animate-pulse rounded-2xl" />
+                <div
+                  key={i}
+                  className="w-[420px] h-[300px] bg-gray-100 animate-pulse rounded-2xl flex-shrink-0"
+                />
               ))
             ) : marqueeNews.length > 0 ? (
+              // DATA BERITA
               marqueeNews.map((item, index) => (
                 <div key={`${item.id}-${index}`} className="w-[420px] flex-shrink-0">
                   <NewsCard data={item} />
                 </div>
               ))
             ) : (
-              <p className="text-gray-400 p-10">Belum ada berita terbaru.</p>
+              <p className="text-gray-400 p-10 w-screen text-center">Belum ada berita terbaru.</p>
             )}
+          </div>
+        </div>
+      </section>
+
+      {/* ================= SECTION: STATISTIK ================= */}
+      <section className="py-16 border-b border-gray-100 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <StatCard value={3500} suffix="" label="Penduduk" isRibu />
+            <StatCard value={4} suffix="" label="Dusun" />
+            <StatCard value={120} suffix="+" label="UMKM Aktif" />
+            <StatCard value={24} suffix=" Jam" label="Layanan Online" />
           </div>
         </div>
       </section>
@@ -161,7 +207,7 @@ function NewsCard({ data }) {
   const getImageUrl = useNewsStore((state) => state.getImageUrl);
 
   return (
-    <article className="relative h-[300px] w-full rounded-2xl overflow-hidden group/card shadow-xl bg-gray-900 text-white border border-gray-100">
+    <article className="relative h-[300px] w-full rounded-2xl overflow-hidden group/card shadow-xl bg-gray-900 text-white border border-gray-100 cursor-pointer">
       <Image
         src={getImageUrl(data.image)}
         alt={data.title}
@@ -171,7 +217,7 @@ function NewsCard({ data }) {
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/100 via-black/40 to-transparent"></div>
       <div className="absolute bottom-0 left-0 p-8 w-full z-10">
-        <Link href={`/berita/${data.id}`} className="text-lg font-bold hover:text-green-400">
+        <Link href={`/berita/${data.id}`} className="text-lg font-bold hover:text-green-400 block">
           → Baca Selengkapnya
         </Link>
         <h3 className="text-xl md:text-2xl font-extrabold mt-3 line-clamp-2 uppercase">
@@ -179,5 +225,33 @@ function NewsCard({ data }) {
         </h3>
       </div>
     </article>
+  );
+}
+
+/* ================= STATCARD ================= */
+function StatCard({ value, suffix, label, isRibu = false }) {
+  const [displayValue, setDisplayValue] = useState(0);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true }}
+      onViewportEnter={() => {
+        animate(0, value, {
+          duration: 2,
+          onUpdate: (latest) => setDisplayValue(Math.round(latest)),
+        });
+      }}
+      className="p-4"
+    >
+      <div className="text-4xl font-bold text-green-600 mb-2">
+        {isRibu && displayValue >= 1000
+          ? (displayValue / 1000).toFixed(1) + " Ribu"
+          : displayValue}
+        {suffix}
+      </div>
+      <div className="text-gray-500 font-medium">{label}</div>
+    </motion.div>
   );
 }

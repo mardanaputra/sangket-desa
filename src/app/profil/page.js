@@ -87,8 +87,8 @@ function ProfilSidebar({ menuItems, activeHash, SCROLL_OFFSET }) {
                 href={item.href}
                 onClick={(e) => handleScrollTo(e, item.href)}
                 className={`flex items-center p-3 text-xs rounded-xl transition-all
-                  ${activeHash === item.href 
-                    ? "bg-green-600 text-white font-bold shadow-lg shadow-green-200" 
+                  ${activeHash === item.href
+                    ? "bg-green-600 text-white font-bold shadow-lg shadow-green-200"
                     : "text-gray-600 hover:bg-green-50 hover:text-green-700"}`}
               >
                 {item.name}
@@ -111,7 +111,7 @@ export default function Profil() {
   const menuItems = [
     { name: "Sejarah Desa", href: "#sejarah" },
     { name: "Visi & Misi", href: "#visi-misi" },
-    { name: "Struktur Organisasi", href: "#struktur" },
+    { name: "Prajuru Adat", href: "#struktur" },
     { name: "Peta & Lokasi", href: "#peta" },
   ];
 
@@ -175,7 +175,7 @@ export default function Profil() {
           </div>
 
           <div className="lg:col-span-3 space-y-12">
-            
+
             {/* 1. SEJARAH */}
             <section id="sejarah" className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100 scroll-mt-24">
               <div className="flex items-center gap-4 mb-6">
@@ -199,66 +199,71 @@ export default function Profil() {
               </ul>
             </section>
 
-            {/* 3. STRUKTUR ORGANISASI (REVISI GARIS NYAMBUNG) */}
-            <section id="struktur" className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100 scroll-mt-24 overflow-hidden">
-              <div className="text-center mb-12">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Struktur Organisasi</h2>
-                <div className="w-16 h-1 bg-green-600 mx-auto mt-3 rounded-full" />
+            {/* 3. STRUKTUR ORGANISASI */}
+            <section id="struktur" className="bg-white rounded-3xl shadow-sm p-8 border border-gray-100 scroll-mt-24 overflow-hidden">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">Prajuru Adat</h2>
+                <div className="w-16 h-1 bg-green-600 mx-auto mt-4 rounded-full" />
               </div>
 
-              <div className="space-y-12 relative">
-                
-                {/* TINGKAT 1: KEPALA DESA */}
-                <div className="flex justify-center relative">
-                  <div className="w-full max-w-[220px]">
-                    <ProfileCardNoPhoto name="I Wayan Sudarsana, S.T." role="Kepala Desa" />
-                  </div>
-                  <div className="absolute -bottom-12 w-[2px] bg-green-600 h-12 hidden md:block"></div>
-                </div>
-
-                {/* TINGKAT 2: SEKRETARIS */}
-                <div className="flex justify-center relative">
-                  <div className="w-full max-w-[220px]">
-                    <ProfileCardNoPhoto name="Ni Putu Dian Lestari" role="Sekretaris Desa" />
-                  </div>
-                  <div className="absolute -bottom-12 w-[2px] bg-green-600 h-12 hidden md:block"></div>
-                </div>
-
-                {/* TINGKAT 3: KAUR & KASI */}
-                <div className="relative pt-6">
-                  {/* Garis horisontal 2px */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-[2px] bg-green-600 hidden md:block"></div>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative">
-                    <div className="absolute -top-6 left-[12.5%] w-[2px] h-6 bg-green-600 hidden lg:block"></div>
-                    <div className="absolute -top-6 left-[37.5%] w-[2px] h-6 bg-green-600 hidden lg:block"></div>
-                    <div className="absolute -top-6 left-[62.5%] w-[2px] h-6 bg-green-600 hidden lg:block"></div>
-                    <div className="absolute -top-6 left-[87.5%] w-[2px] h-6 bg-green-600 hidden lg:block"></div>
-                    
-                    <ProfileCardNoPhoto name="I Gede Eka Putra" role="Kaur Keuangan" />
-                    <ProfileCardNoPhoto name="Ni Komang Sri Wahyuni" role="Kaur Umum & TU" />
-                    <ProfileCardNoPhoto name="I Made Adi Wijaya" role="Kasi Pemerintahan" />
-                    <ProfileCardNoPhoto name="I Ketut Satria" role="Kasi Kesejahteraan" />
+              <div className="space-y-12">
+                {/* PIMPINAN INTI */}
+                <div className="flex flex-col items-center">
+                  <div className="w-full max-w-[260px] mb-8">
+                    <ProfileCardNoPhoto name="I Nyoman Suarjana, SE" role="Bendesa Adat" color="green" />
                   </div>
 
-                  {/* Jalur vertikal menyambung ke tingkat bawah */}
-                  <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 w-[2px] h-12 bg-green-600 hidden md:block"></div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full">
+                    <ProfileCardNoPhoto name="Ir. Ketut Agus Seputra, S.ST., M.T" role="Petajuh" />
+                    <ProfileCardNoPhoto name="I Gede Mulyawan, S.Ag., M.Pd" role="Penyarikan" />
+                    <ProfileCardNoPhoto name="Made Darma Semadi, S.H" role="Petengen" />
+                  </div>
                 </div>
 
-                {/* TINGKAT 4: KEWILAYAHAN (REVISI GARIS & TEKS) */}
-                <div className="relative pt-10">
-                  {/* Garis horisontal dusun 2px - SEKARANG MENYAMBUNG UTUH */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[70%] h-[2px] bg-green-600 hidden md:block"></div>
+                {/* BAGA-BAGA DENGAN GARIS PEMISAH VERTIKAL HIJAU TIPIS */}
+                <div className="pt-8 border-t border-gray-50">
+                  <div className="grid grid-cols-1 md:grid-cols-3">
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto relative">
-                    {/* Garis vertikal dusun menyambung dari garis horisontal */}
-                    <div className="absolute -top-10 left-[16.6%] w-[2px] h-10 bg-green-600 hidden sm:block"></div>
-                    <div className="absolute -top-10 left-[50%] w-[2px] h-10 bg-green-600 hidden sm:block"></div>
-                    <div className="absolute -top-10 left-[83.3%] w-[2px] h-10 bg-green-600 hidden sm:block"></div>
+                    {/* Baga Parahyangan */}
+                    <div className="space-y-4 px-6 mb-8 md:mb-0">
+                      <h4 className="text-center text-[10px] font-black text-green-700 uppercase tracking-[0.2em] mb-4 bg-green-50 py-2 rounded-lg">Baga Parahyangan</h4>
+                      <ProfileCardNoPhoto name="Drs. I Gede Tinggen" role="Anggota" />
+                      <ProfileCardNoPhoto name="Drs. I Nyoman Wijana" role="Anggota" />
+                      <ProfileCardNoPhoto name="Made Susila" role="Anggota" />
+                    </div>
 
-                    <ProfileCardNoPhoto name="I Nyoman Gede" role="Kadun Sangket" />
-                    <ProfileCardNoPhoto name="I Putu Bagus" role="Kadun Labak" />
-                    <ProfileCardNoPhoto name="I Made Suara" role="Kadun Bale Agung" />
+                    {/* Baga Pawongan (Pemisah Hijau Tipis 1px) */}
+                    <div className="space-y-4 px-6 mb-8 md:mb-0 md:border-l border-green-600">
+                      <h4 className="text-center text-[10px] font-black text-green-700 uppercase tracking-[0.2em] mb-4 bg-green-50 py-2 rounded-lg">Baga Pawongan</h4>
+                      <ProfileCardNoPhoto name="Komang Suryawan" role="Anggota" />
+                      <ProfileCardNoPhoto name="Made Sudarma" role="Anggota" />
+                      <ProfileCardNoPhoto name="I Kadek Juniarta, S.T" role="Anggota" />
+                    </div>
+
+                    {/* Baga Palemahan (Pemisah Hijau Tipis 1px) */}
+                    <div className="space-y-4 px-6 md:border-l border-green-600">
+                      <h4 className="text-center text-[10px] font-black text-green-700 uppercase tracking-[0.2em] mb-4 bg-green-50 py-2 rounded-lg">Baga Palemahan</h4>
+                      <ProfileCardNoPhoto name="Gede Punia" role="Anggota" />
+                      <ProfileCardNoPhoto name="Ketut Kastika" role="Anggota" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* KEPALA LEMBAGA */}
+                <div className="pt-16 border-t border-gray-100">
+                  <div className="text-center mb-10">
+                    <span className="text-amber-600 font-bold text-[10px] uppercase tracking-[0.3em]">Lembaga Pendukung</span>
+                    <h3 className="text-2xl font-bold text-gray-800 mt-1">Kepala Lembaga Desa</h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <ProfileCardNoPhoto name="I Made Teja, S.Sos" role="Ketua Sabha Desa" color="amber" />
+                    <ProfileCardNoPhoto name="Dr. I Nyoman Gede Remaja, S.H., M.H" role="Ketua Kertha Desa" color="amber" />
+                    <ProfileCardNoPhoto name="Gede Sami Mulata" role="Kelian Pecalang" color="amber" />
+                    <ProfileCardNoPhoto name="I Nyoman Tinggen" role="Kelian Sekeha Gong" color="amber" />
+                    <ProfileCardNoPhoto name="Made Budiasa, SE" role="Kepala LPD" color="amber" />
+                    <ProfileCardNoPhoto name="Drs. Nyoman Kertia" role="Pembina Yowana" color="amber" />
+                    <ProfileCardNoPhoto name="Made Darma Yoga Semadi" role="Kelian Teruna" color="amber" />
                   </div>
                 </div>
               </div>
