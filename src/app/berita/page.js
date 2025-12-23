@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, useMemo, Suspense } from "react"; 
+import { useEffect, useState, useMemo, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
@@ -17,7 +17,8 @@ function BeritaContent() {
   const searchParams = useSearchParams();
 
   const [currentPage, setCurrentPage] = useState(1);
-  const postsPerPage = 6;
+  // 1. UBAH JUMLAH KARTU PER HALAMAN JADI 10
+  const postsPerPage = 5;
 
   const debouncedSearch = useDebounce(search, 500);
   const { news, categories, loading, fetchNews, fetchCategories } = useNewsStore();
@@ -60,13 +61,26 @@ function BeritaContent() {
     });
   }, [news, debouncedSearch, category]);
 
+  // Reset ke halaman 1 jika filter berubah
   useEffect(() => {
     setCurrentPage(1);
   }, [debouncedSearch, category]);
 
+  // 2. LOGIKA PAGINATION
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentNews = filteredNews.slice(indexOfFirstPost, indexOfLastPost);
+  const totalPages = Math.ceil(filteredNews.length / postsPerPage);
+
+  // Fungsi ganti halaman dengan scroll effect
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    // Scroll ke bagian atas list berita agar user tidak tetap di bawah
+    const listSection = document.getElementById("news-list");
+    if (listSection) {
+      listSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   const fadeInUp = {
     hidden: { opacity: 0, y: 20 },
@@ -101,7 +115,6 @@ function BeritaContent() {
                   ))}
                 </select>
 
-                {/* PERBAIKAN DI SINI: Ditambahkan text-gray-900 */}
                 <input
                   type="text"
                   value={search}
@@ -114,19 +127,63 @@ function BeritaContent() {
           </div>
         </section>
 
-        {/* LIST */}
-        <section className="max-w-7xl mx-auto px-6 -mt-16 relative z-20">
+        {/* LIST BERITA */}
+        {/* Tambahkan ID untuk target scroll saat pindah halaman */}
+        <section id="news-list" className="max-w-7xl mx-auto px-6 -mt-16 relative z-20">
           <AnimatePresence mode="wait">
             {loading ? (
-              <div className="text-center py-20 bg-white rounded-xl">Loading...</div>
+              <div className="text-center py-20 bg-white rounded-xl shadow-sm">Loading...</div>
             ) : currentNews.length > 0 ? (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {currentNews.map((item) => (
-                  <NewsCard key={item.id} data={item} />
-                ))}
-              </div>
+              <>
+                {/* GRID CARD */}
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+                  {currentNews.map((item) => (
+                    <NewsCard key={item.id} data={item} />
+                  ))}
+                </div>
+
+                {/* 3. KOMPONEN PAGINATION */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center items-center gap-2 pb-8">
+                    {/* Tombol Previous */}
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="px-4 py-2 rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      &laquo; Prev
+                    </button>
+
+                    {/* Angka Halaman */}
+                    {[...Array(totalPages)].map((_, index) => {
+                      const pageNum = index + 1;
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => handlePageChange(pageNum)}
+                          className={`w-10 h-10 rounded-md border font-medium transition-colors ${currentPage === pageNum
+                              ? "bg-green-600 text-white border-green-600"
+                              : "bg-white text-gray-700 border-gray-300 hover:bg-green-50"
+                            }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+
+                    {/* Tombol Next */}
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="px-4 py-2 rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Next &raquo;
+                    </button>
+                  </div>
+                )}
+              </>
             ) : (
-              <div className="text-center py-16 bg-white rounded-xl">
+              <div className="text-center py-16 bg-white rounded-xl shadow-sm">
                 <p className="text-gray-500">Berita tidak ditemukan.</p>
               </div>
             )}
