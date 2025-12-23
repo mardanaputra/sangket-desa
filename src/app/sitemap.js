@@ -2,7 +2,7 @@
 import { supabase } from "@/utils/supabase/client";
 
 export default async function sitemap() {
-  const baseUrl = "https://desasangket.id";
+  const baseUrl = "https://sisangket.vercel.app";
 
   // 1. Ambil semua ID berita dari database
   const { data: articles } = await supabase
