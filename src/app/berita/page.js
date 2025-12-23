@@ -18,7 +18,7 @@ function BeritaContent() {
 
   const [currentPage, setCurrentPage] = useState(1);
   // 1. UBAH JUMLAH KARTU PER HALAMAN JADI 10
-  const postsPerPage = 5;
+  const postsPerPage = 6;
 
   const debouncedSearch = useDebounce(search, 500);
   const { news, categories, loading, fetchNews, fetchCategories } = useNewsStore();
