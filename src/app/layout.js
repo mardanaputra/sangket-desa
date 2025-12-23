@@ -31,12 +31,17 @@ export const metadata = {
     index: true,
     follow: true,
   },
+  // 👇 BAGIAN INI DITAMBAHKAN UNTUK VERIFIKASI GOOGLE
+  verification: {
+    google: "gMiGK8i8RvvLrMsVCSkk7osW4XucWqU2OzvyrcWhvTM",
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="id">
       <body>
+        {/* Navbar dipasang global di sini agar muncul di semua halaman */}
         <Navbar />
         {children}
         <Footer />
